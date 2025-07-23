@@ -1,3 +1,5 @@
+# Fix: Sicherstellen, dass Trainingsdaten für das Modell keine NaN-Werte enthalten
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime
@@ -170,21 +172,25 @@ with tab2:
     if not use_external_model:
         df_train = merged.copy()
         df_train['hour'] = datetime.now().hour
+        df_train = df_train.dropna(subset=['capacity','hour','occupation_percent'])
         X = df_train[['capacity', 'hour']]
         y = df_train['occupation_percent']
-        model = RandomForestRegressor(n_estimators=3, max_depth=2, random_state=42)
-        model.fit(X, y)
+        if not X.empty and not y.empty:
+            model = RandomForestRegressor(n_estimators=3, max_depth=2, random_state=42)
+            model.fit(X, y)
 
-        future_times = pd.date_range(datetime.now(), periods=48*12, freq='5T')
-        predictions = []
-        for name in merged['name_x']:
-            cap = merged.loc[merged['name_x'] == name, 'capacity'].values[0]
-            for t in future_times:
-                pred_occ = model.predict([[cap, t.hour]])[0]
-                predictions.append([name, t, round(pred_occ, 2)])
-        pred_df = pd.DataFrame(predictions, columns=['Parking Lot', 'Datetime', 'Occupation (in %)'])
+            future_times = pd.date_range(datetime.now(), periods=48*12, freq='5T')
+            predictions = []
+            for name in merged['name_x']:
+                cap = merged.loc[merged['name_x'] == name, 'capacity'].values[0]
+                for t in future_times:
+                    pred_occ = model.predict([[cap, t.hour]])[0]
+                    predictions.append([name, t, round(pred_occ, 2)])
+            pred_df = pd.DataFrame(predictions, columns=['Parking Lot', 'Datetime', 'Occupation (in %)'])
 
-        display_predictions_by_time(pred_df, coords)
+            display_predictions_by_time(pred_df, coords)
+        else:
+            st.warning("Not enough valid data for training the model.")
     else:
         st.info("External model predictions yet to come.")
 

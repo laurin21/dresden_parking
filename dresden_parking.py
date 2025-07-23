@@ -1,35 +1,24 @@
-# Fix: Sicherstellen, dass Trainingsdaten für das Modell keine NaN-Werte enthalten
-
 import streamlit as st
 import pandas as pd
 from datetime import datetime
 import requests
-from bs4 import BeautifulSoup
 import pydeck as pdk
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 
 st.set_page_config(page_title="Parking in Dresden", layout="wide")
 
-# --- Webscraping Code ohne Browser ---
+# --- Neue JSON-basierte Scraping Funktion ---
 def scrap_parking():
-    url = "https://www.dresden.de/apps_ext/ParkplatzApp/index"
+    url = "https://www.dresden.de/apps_ext/ParkplatzApp/data.json"
     r = requests.get(url)
-    soup = BeautifulSoup(r.text, "html.parser")
-    table = soup.find("div", class_="contentsection").find("table")
-    rows = table.find_all("tr")
+    data = r.json()
 
     name, capacity, free = [], [], []
-    for row in rows[1:]:
-        cols = row.find_all("td")
-        if len(cols) >= 3:
-            n = cols[0].get_text(strip=True)
-            cap = cols[1].get_text(strip=True)
-            fr = cols[2].get_text(strip=True)
-            if cap.isdigit() and fr.isdigit():
-                name.append(n)
-                capacity.append(int(cap))
-                free.append(int(fr))
+    for item in data['parking']:
+        name.append(item['name'])
+        capacity.append(item['max'])
+        free.append(item['free'])
 
     df = pd.DataFrame({"name": name, "capacity": capacity, "Free Spots": free})
     df["occupation_percent"] = ((df["capacity"] - df["Free Spots"]) / df["capacity"] * 100).round(2)
@@ -60,7 +49,7 @@ def load_live_data():
     df["rain"] = weather[3]
     df["date"] = now.strftime("%d/%m/%Y")
     df["time"] = now.strftime("%H:%M:%S")
-    return df
+    return df.fillna(0)
 
 st.title("🚗 🅿️ Parking in Dresden")
 coords = load_coordinates()
@@ -81,7 +70,7 @@ if 'occupation_percent' in merged.columns and merged['occupation_percent'].notna
     try:
         idx_min = merged['occupation_percent'].idxmin()
         emptiest_row = merged.loc[idx_min]
-        emptiest_name = emptiest_row['name_x'] if 'name_x' in emptiest_row else emptiest_row['name']
+        emptiest_name = emptiest_row.get('name_x', emptiest_row.get('name', 'N/A'))
         emptiest_value = emptiest_row['occupation_percent']
     except Exception:
         emptiest_name = "N/A"

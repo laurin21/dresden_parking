@@ -64,7 +64,10 @@ st.title("🚗 🅿️ Parking in Dresden")
 coords = load_coordinates()
 live_df = load_live_data()
 
-# Merge
+
+
+
+# Merge und Berechnung des emptiest_row sicher machen
 if "name" in coords.columns and "name" in live_df.columns:
     live_df['name'] = live_df['name'].astype(str)
     coords['name'] = coords['name'].astype(str)
@@ -74,11 +77,21 @@ if "name" in coords.columns and "name" in live_df.columns:
 else:
     merged = live_df.copy()
 
-# Sicherstellen, dass occupation_percent keine leeren Werte enthält
-if 'occupation_percent' in merged.columns and not merged['occupation_percent'].dropna().empty:
-    emptiest_row = merged.loc[merged['occupation_percent'].idxmin()]
+# Prüfen, ob occupation_percent existiert und gültige Werte hat
+if 'occupation_percent' in merged.columns:
+    valid_occ = merged['occupation_percent'].dropna()
+    if not valid_occ.empty:
+        emptiest_row = merged.loc[valid_occ.idxmin()]
+    else:
+        emptiest_row = None
 else:
     emptiest_row = None
+
+
+
+
+
+
 tab1, tab2 = st.tabs(["Live Data", "Prediction"])
 
 with tab1:

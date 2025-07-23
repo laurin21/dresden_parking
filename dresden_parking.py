@@ -1,10 +1,14 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import subprocess
+subprocess.run(["playwright", "install", "chromium"])
 from playwright.sync_api import sync_playwright
 import pydeck as pdk
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
+
+browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
 
 st.set_page_config(page_title="Parking in Dresden", layout="wide")
 

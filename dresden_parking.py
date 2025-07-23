@@ -65,7 +65,9 @@ coords = load_coordinates()
 live_df = load_live_data()
 
 # Merge
-if "name" in coords.columns:
+if "name" in coords.columns and "name" in live_df.columns:
+    live_df['name'] = live_df['name'].astype(str)
+    coords['name'] = coords['name'].astype(str)
     live_df['name_lower'] = live_df['name'].str.lower()
     coords['name_lower'] = coords['name'].str.lower()
     merged = pd.merge(live_df, coords, on='name_lower', how='left')

@@ -74,6 +74,11 @@ if "name" in coords.columns and "name" in live_df.columns:
 else:
     merged = live_df.copy()
 
+# Sicherstellen, dass occupation_percent keine leeren Werte enthält
+if 'occupation_percent' in merged.columns and not merged['occupation_percent'].dropna().empty:
+    emptiest_row = merged.loc[merged['occupation_percent'].idxmin()]
+else:
+    emptiest_row = None
 tab1, tab2 = st.tabs(["Live Data", "Prediction"])
 
 with tab1:

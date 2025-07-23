@@ -64,10 +64,7 @@ st.title("🚗 🅿️ Parking in Dresden")
 coords = load_coordinates()
 live_df = load_live_data()
 
-
-
-
-# Merge und Berechnung des emptiest_row sicher machen
+# Merge
 if "name" in coords.columns and "name" in live_df.columns:
     live_df['name'] = live_df['name'].astype(str)
     coords['name'] = coords['name'].astype(str)
@@ -77,20 +74,19 @@ if "name" in coords.columns and "name" in live_df.columns:
 else:
     merged = live_df.copy()
 
-# Prüfen, ob occupation_percent existiert und gültige Werte hat
-if 'occupation_percent' in merged.columns:
-    valid_occ = merged['occupation_percent'].dropna()
-    if not valid_occ.empty:
-        emptiest_row = merged.loc[valid_occ.idxmin()]
-    else:
-        emptiest_row = None
+# Sicherere Berechnung des Emptiest Parking Lot
+if 'occupation_percent' in merged.columns and merged['occupation_percent'].notna().any():
+    try:
+        idx_min = merged['occupation_percent'].idxmin()
+        emptiest_row = merged.loc[idx_min]
+        emptiest_name = emptiest_row['name_x'] if 'name_x' in emptiest_row else emptiest_row['name']
+        emptiest_value = emptiest_row['occupation_percent']
+    except Exception:
+        emptiest_name = "N/A"
+        emptiest_value = "N/A"
 else:
-    emptiest_row = None
-
-
-
-
-
+    emptiest_name = "N/A"
+    emptiest_value = "N/A"
 
 tab1, tab2 = st.tabs(["Live Data", "Prediction"])
 
@@ -102,10 +98,7 @@ with tab1:
     total_capacity = merged['capacity'].sum()
     total_free = merged['Free Spots'].sum()
     total_occupancy = ((total_capacity - total_free) / total_capacity * 100).round(2)
-    emptiest_row = merged.loc[merged['occupation_percent'].idxmin()]
-    emptiest_name = emptiest_row['name_x'] if 'name_x' in emptiest_row else emptiest_row['name']
-    emptiest_value = emptiest_row['occupation_percent']
-    
+
     col1, col2 = st.columns([2, 1])
     with col1:
         st.subheader("Overview")

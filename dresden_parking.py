@@ -5,28 +5,51 @@ import requests
 import pydeck as pdk
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
+from bs4 import BeautifulSoup
 
 st.set_page_config(page_title="Parking in Dresden", layout="wide")
 
-# --- Nur JSON-API mit Fehlerprüfung ---
+# --- JSON mit HTML-Fallback ---
 def scrap_parking():
     url_json = "https://www.dresden.de/apps_ext/ParkplatzApp/data.json"
     try:
         r = requests.get(url_json, timeout=5)
-        r.raise_for_status()
-        data = r.json()
-        if 'parking' not in data:
-            st.warning("Keine Parkplatzdaten im JSON gefunden.")
-            return pd.DataFrame(columns=["name","capacity","Free Spots","occupation_percent"])
-        df = pd.DataFrame([{ 
-            "name": p["name"],
-            "capacity": p["max"],
-            "Free Spots": p["free"],
-            "occupation_percent": round((p["max"]-p["free"])/p["max"]*100,2) if p["max"] else 0
-        } for p in data['parking']])
+        if r.status_code == 200 and r.text.strip().startswith("{"):
+            data = r.json()
+            if 'parking' in data:
+                df = pd.DataFrame([{ 
+                    "name": p["name"],
+                    "capacity": p["max"],
+                    "Free Spots": p["free"],
+                    "occupation_percent": round((p["max"]-p["free"])/p["max"]*100,2) if p["max"] else 0
+                } for p in data['parking']])
+                return df.fillna(0)
+    except Exception as e:
+        st.warning(f"Fehler JSON: {e}, versuche HTML...")
+
+    # HTML-Fallback
+    try:
+        url_html = "https://www.dresden.de/apps_ext/ParkplatzApp/index"
+        r = requests.get(url_html, timeout=5)
+        soup = BeautifulSoup(r.text, "html.parser")
+        table = soup.find("div", class_="contentsection").find("table")
+        rows = table.find_all("tr")
+        name, capacity, free = [], [], []
+        for row in rows[1:]:
+            cols = row.find_all("td")
+            if len(cols) >= 3:
+                n = cols[0].get_text(strip=True)
+                cap = cols[1].get_text(strip=True)
+                fr = cols[2].get_text(strip=True)
+                if cap.isdigit() and fr.isdigit():
+                    name.append(n)
+                    capacity.append(int(cap))
+                    free.append(int(fr))
+        df = pd.DataFrame({"name": name, "capacity": capacity, "Free Spots": free})
+        df["occupation_percent"] = ((df["capacity"] - df["Free Spots"]) / df["capacity"] * 100).round(2)
         return df.fillna(0)
     except Exception as e:
-        st.error(f"Fehler beim Abrufen der Daten: {e}")
+        st.error(f"Fehler HTML-Scraping: {e}")
         return pd.DataFrame(columns=["name","capacity","Free Spots","occupation_percent"])
 
 def scrap_weather():
@@ -94,7 +117,6 @@ else:
         if st.button("🔄 Reload live data"):
             live_df = load_live_data()
 
-        # KPIs
         total_capacity = merged['capacity'].sum()
         total_free = merged['Free Spots'].sum()
         total_occupancy = ((total_capacity - total_free) / total_capacity * 100).round(2)
@@ -115,7 +137,6 @@ else:
 
         st.markdown("---")
 
-        # Karte nur mit Farben, kleine Punkte
         if 'lat' in merged.columns and 'lon' in merged.columns and not merged[['lat','lon']].dropna().empty:
             st.subheader("Map of parking lots in Dresden")
             merged['color'] = merged['occupation_percent'].apply(lambda x: [128,128,128] if pd.isna(x) else [int(255*x/100), int(255*(1-x/100)), 0])

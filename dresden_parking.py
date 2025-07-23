@@ -5,24 +5,43 @@ import requests
 import pydeck as pdk
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
+from bs4 import BeautifulSoup
 
 st.set_page_config(page_title="Parking in Dresden", layout="wide")
 
-# --- Neue JSON-basierte Scraping Funktion ---
+# --- Scraping mit Fallback ---
 def scrap_parking():
-    url = "https://www.dresden.de/apps_ext/ParkplatzApp/data.json"
-    r = requests.get(url)
-    data = r.json()
-
-    name, capacity, free = [], [], []
-    for item in data['parking']:
-        name.append(item['name'])
-        capacity.append(item['max'])
-        free.append(item['free'])
-
-    df = pd.DataFrame({"name": name, "capacity": capacity, "Free Spots": free})
+    url_json = "https://www.dresden.de/apps_ext/ParkplatzApp/data.json"
+    try:
+        r = requests.get(url_json, timeout=5)
+        data = r.json()
+        name, capacity, free = [], [], []
+        for item in data['parking']:
+            name.append(item['name'])
+            capacity.append(item['max'])
+            free.append(item['free'])
+        df = pd.DataFrame({"name": name, "capacity": capacity, "Free Spots": free})
+    except Exception:
+        # Fallback: HTML scraping
+        url_html = "https://www.dresden.de/apps_ext/ParkplatzApp/index"
+        r = requests.get(url_html)
+        soup = BeautifulSoup(r.text, "html.parser")
+        table = soup.find("div", class_="contentsection").find("table")
+        rows = table.find_all("tr")
+        name, capacity, free = [], [], []
+        for row in rows[1:]:
+            cols = row.find_all("td")
+            if len(cols) >= 3:
+                n = cols[0].get_text(strip=True)
+                cap = cols[1].get_text(strip=True)
+                fr = cols[2].get_text(strip=True)
+                if cap.isdigit() and fr.isdigit():
+                    name.append(n)
+                    capacity.append(int(cap))
+                    free.append(int(fr))
+        df = pd.DataFrame({"name": name, "capacity": capacity, "Free Spots": free})
     df["occupation_percent"] = ((df["capacity"] - df["Free Spots"]) / df["capacity"] * 100).round(2)
-    return df
+    return df.fillna(0)
 
 # Dummy Wetterfunktion (optional OpenWeatherMap integrieren)
 def scrap_weather():

@@ -376,18 +376,15 @@ else:
 
     view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
 
-    # Legende mit Streamlit Widgets
-    st.subheader("Legende")
-    col1, col2 = st.columns([1, 4])
-    with col1:
-        st.color_picker("Niedrig", "#00FF00", key="low_color", disabled=True)
-    with col2:
-        st.write(f"Niedrig ({min_val:.1f}%)")
-    col3, col4 = st.columns([1, 4])
-    with col3:
-        st.color_picker("Hoch", "#FF0000", key="high_color", disabled=True)
-    with col4:
-        st.write(f"Hoch ({max_val:.1f}%)")
+    # Karte anzeigen
+    st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
 
-    deck = pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip)
-    st.pydeck_chart(deck)
+    # Legende unterhalb der Karte mit zwei Spalten nebeneinander
+    st.subheader("Legende")
+    col_low, col_high = st.columns(2)
+    with col_low:
+        st.color_picker("Niedrig", "#00FF00", key="low_color", disabled=True)
+        st.write(f"Niedrig ({min_val:.1f}%)")
+    with col_high:
+        st.color_picker("Hoch", "#FF0000", key="high_color", disabled=True)
+        st.write(f"Hoch ({max_val:.1f}%)")

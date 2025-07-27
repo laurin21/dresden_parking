@@ -267,28 +267,33 @@ else:
     st.write("**Zusammenfassung der Eingaben:**")
     inputs = {
         "Name": model_name_value,
-        "Capacity": capacity,
-        "Temperature": temperature,
+        "Capacity": float(capacity),
+        "Temperature": float(temperature),
         "Description": description,
-        "Humidity": humidity,
+        "Humidity": float(humidity),
         "Rain": float(rain),
         "District": district,
         "Type": type_,
-        "final_avg_occ": final_avg_occ,
-        "in_event_window": in_event_window,
+        "final_avg_occ": float(final_avg_occ),
+        "in_event_window": int(in_event_window),
         "event_size": event_size,
-        "distance_to_nearest_parking": distance_to_nearest_parking,
-        "hour": hour,
-        "minute_of_day": minute_of_day,
-        "weekday": weekday,
-        "is_weekend": is_weekend,
-        "is_holiday": is_holiday
+        "distance_to_nearest_parking": float(distance_to_nearest_parking),
+        "hour": float(hour),
+        "minute_of_day": float(minute_of_day),
+        "weekday": float(weekday),
+        "is_weekend": float(is_weekend),
+        "is_holiday": float(is_holiday)
     }
     st.json(inputs)
 
     # --- Prediction durchführen ---
     feature_order = list(model.feature_names_in_) if hasattr(model, "feature_names_in_") else list(inputs.keys())
-    input_df = pd.DataFrame([inputs], columns=feature_order)
+
+    # Alle Strings zu Kategorien umwandeln
+    input_df = pd.DataFrame([[inputs[f] for f in feature_order]], columns=feature_order)
+    for col in input_df.select_dtypes(include=['object']).columns:
+        input_df[col] = input_df[col].astype('category')
+
     prediction = model.predict(input_df)[0]
 
     st.markdown("---")

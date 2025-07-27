@@ -335,15 +335,20 @@ else:
     
     st.header("Parkplatz-Vorhersagen auf Karte")
 
-    # DataFrame vorbereiten mit invertierter Farbskala (0% = rot, 100% = grün)
+    # Normierte Werte (0 = minimal, 1 = maximal) berechnen
+    vorhersagen = [res["Vorhersage %"] for res in results]
+    min_val, max_val = min(vorhersagen), max(vorhersagen)
+    range_val = max_val - min_val if max_val != min_val else 1
+
     map_data = []
     for res in results:
         parkplatz = res["Parkplatz"]
-        vorhersage = round(res["Vorhersage %"], 1)  # auf eine Nachkommastelle runden
+        vorhersage = round(res["Vorhersage %"], 1)
         coords = coordinates_mapping.get(parkplatz)
         if coords:
-            r = int((1 - vorhersage / 100) * 255)
-            g = int((vorhersage / 100) * 255)
+            norm_value = (res["Vorhersage %"] - min_val) / range_val  # Skala 0-1
+            r = int(norm_value * 255)
+            g = int((1 - norm_value) * 255)
             b = 0
             map_data.append({
                 "lat": coords[1],
@@ -355,7 +360,6 @@ else:
 
     map_df = pd.DataFrame(map_data)
 
-    # pydeck Layer mit Hover-Tooltip
     scatter_layer = pdk.Layer(
         "ScatterplotLayer",
         data=map_df,
@@ -371,6 +375,19 @@ else:
     }
 
     view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
+
+    # Legende mit Streamlit Widgets
+    st.subheader("Legende")
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        st.color_picker("Niedrig", "#00FF00", key="low_color", disabled=True)
+    with col2:
+        st.write(f"Niedrig ({min_val:.1f}%)")
+    col3, col4 = st.columns([1, 4])
+    with col3:
+        st.color_picker("Hoch", "#FF0000", key="high_color", disabled=True)
+    with col4:
+        st.write(f"Hoch ({max_val:.1f}%)")
 
     deck = pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip)
     st.pydeck_chart(deck)

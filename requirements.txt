@@ -6,3 +6,4 @@ pydeck
 playwright
 beautifulsoup4
 pickle
+xgboost

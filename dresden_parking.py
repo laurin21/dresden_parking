@@ -11,6 +11,52 @@ st.set_page_config(page_title="Parking Model Inputs", layout="wide")
 pkl_files = glob.glob("xgb_model_*.pkl")
 parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_files]
 
+
+# Mapping der Koordinaten aus bereitgestellten Daten
+coordinates_mapping = {
+    "Altmarkt": (13.7417891, 51.05067008),
+    "Altmarkt - Galerie": (13.73787803, 51.04676432),
+    "An der Frauenkirche": (13.74419347, 51.05141507),
+    "Budapester Straße": (13.730277, 51.046519),
+    "Centrum - Galerie": (13.73394691, 51.04537162),
+    "Cossebaude": (13.632377, 51.0852),
+    "Ferdinandplatz": (13.73963711, 51.04588257),
+    "Fidelio-F.-Finke-Straße": (13.814272, 51.052679),
+    "Frauenkirche / Neumarkt": (13.7308651, 51.05900197),
+    "GALERIA Karstadt Kaufhof": (13.73804453, 51.04676432),
+    "Grenzstraße": (13.776393, 51.12798),
+    "Haus am Zwinger": (13.7357789, 51.05141429),
+    "Kaditz": (13.69100924, 51.08130555),
+    "Klotzsche": (13.789227, 51.115823),
+    "Kongresszentrum": (13.73118775, 51.04197071),
+    "Langebrück": (13.840873, 51.127132),
+    "MESSE DRESDEN Parkplatz P7": (13.71950558, 51.06746291),
+    "Ostra-Ufer": (13.728648, 51.060423),
+    "Parkhaus Mitte": (13.72611015, 51.05814122),
+    "Pennrich": (13.626586, 51.0406),
+    "Pieschener Allee Bus": (13.728977, 51.061748),
+    "Pirnaischer Platz": (13.74356808, 51.0481722),
+    "Prohlis": (13.79944738, 50.99940802),
+    "Reick": (13.790173, 51.021124),
+    "Reitbahnstraße": (13.73342566, 51.04356811),
+    "SachsenEnergie Center": (13.73085214, 51.03859607),
+    "Sarrasanistraße": (13.74502398, 51.05762661),
+    "Schießgasse": (13.74450534, 51.0504296),
+    "Semperoper": (13.73395773, 51.05543977),
+    "SP1 Straßburger Platz": (13.756661, 51.046848),
+    "Stadtforum Dresden": (13.739645, 51.046649),
+    "Strehlener Straße": (13.747033, 51.034874),
+    "Taschenbergpalais": (13.73534138, 51.05176913),
+    "Theresienstraße": (13.74202109, 51.0631677),
+    "Wiener Platz / Hauptbahnhof": (13.731322, 51.041955),
+    "Wiesentorstraße": (13.74290934, 51.05670496),
+    "World Trade Center": (13.72171564, 51.04937362),
+    "Wöhrl / Florentinum": (13.73796299, 51.04451611)
+}
+
+# Diese mapping-Daten können später in der Streamlit-App genutzt werden, um Marker auf einer Karte zu platzieren.
+
+
 # Mapping vom Dateinamen zur Modell-"Name" Variable
 name_mapping = {
     "Altmarkt": "Altmarkt",
@@ -281,6 +327,27 @@ else:
         
         prediction = model.predict(input_df)[0]
         results.append({"Parkplatz": model_name_value, "Vorhersage %": round(prediction, 2)})
+
+    def create_map_dataframe(results):
+        map_data = []
+        for row in results:
+            coords = coordinates_mapping.get(row["Parkplatz"])
+            if coords:
+                # Farbe anhand der Belegung bestimmen (Rot = >70%, sonst Grün)
+                fill_color = "#FF0000" if row["Vorhersage %"] > 70 else "#00FF00"
+                map_data.append({
+                    "lat": coords[1],
+                    "lon": coords[0],
+                    "size": 100,
+                    "fill_color": fill_color
+                })
+        return pd.DataFrame(map_data)
+
+    # Nutzung des DataFrames in der Streamlit-App
+    def show_map(results):
+        map_df = create_map_dataframe(results)
+        st.map(map_df, latitude="lat", longitude="lon")
+
 
     st.markdown("---")
     st.header("Vorhersagen für alle Parkplätze")

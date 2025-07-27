@@ -221,6 +221,9 @@ rain_values = ['0.0', '0.01', '0.02', '0.03', '0.04', '0.05', '0.06', '0.07', '0
 description_values = ['Clear', 'Cloudy', 'Fair', 'Fog', 'Light Rain', 'Light Rain with Thunder', 'Mostly Cloudy', 'Partly Cloudy', 'Rain', 'Rain Shower', 'Showers in the Vicinity', 'Sunny', 'Thunder in the Vicinity', 'Thunderstorm']
 event_size_values = ['', 'large', 'medium', 'small', 'unknown']
 
+# Feiertage Sachsen
+sachsen_holidays = holidays.Germany(prov='SN')
+
 if not pkl_files:
     st.warning("Keine .pkl-Dateien im aktuellen Verzeichnis gefunden.")
 else:
@@ -247,7 +250,7 @@ else:
     minute_of_day = prediction_time.hour * 60 + prediction_time.minute
     weekday = prediction_time.weekday()
     is_weekend = 1 if weekday >= 5 else 0
-    is_holiday = 0
+    is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
 
     # Eingaben für Modell (nur dynamische Inputs)
     st.subheader("Eingaben für Modell")

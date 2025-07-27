@@ -286,6 +286,16 @@ else:
     }
     st.json(inputs)
 
+     # --- Prediction durchführen ---
+    feature_order = list(model.feature_names_in_) if hasattr(model, "feature_names_in_") else list(inputs.keys())
+    input_vector = [[inputs[feat] for feat in feature_order]]
+    prediction = model.predict(input_vector)[0]
+
+    st.markdown("---")
+    st.header(f"Vorhergesagte Belegung: {prediction:.2f} %")
+
+    # --- Debugging Mode ---
+
     st.markdown("---")
     if st.toggle("Debugging Mode"):
         st.subheader("Debugging Informationen")

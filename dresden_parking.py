@@ -1,6 +1,7 @@
 import streamlit as st
 import pickle
 import glob
+from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Parking Model Inputs", layout="wide")
 
@@ -17,6 +18,17 @@ else:
 
     with open(selected_file, "rb") as f:
         model = pickle.load(f)
+
+    # --- Zeitfeatures automatisch bestimmen + Slider für Blick in Zukunft ---
+    st.subheader("Zeiteinstellungen")
+    minutes_ahead = st.slider("Vorhersagezeitraum (in Minuten, bis 48h)", min_value=0, max_value=48*60, value=0, step=5)
+    prediction_time = datetime.now() + timedelta(minutes=minutes_ahead)
+
+    hour = prediction_time.hour
+    minute_of_day = prediction_time.hour * 60 + prediction_time.minute
+    weekday = prediction_time.weekday()
+    is_weekend = 1 if weekday >= 5 else 0
+    is_holiday = 0  # Platzhalter: echte Feiertagslogik kann hier ergänzt werden
 
     # Eingaben für Modell (ohne Zeitfeatures)
     st.subheader("Eingaben für Modell (ohne Zeitfeatures)")
@@ -46,7 +58,12 @@ else:
         "final_avg_occ": final_avg_occ,
         "in_event_window": in_event_window,
         "event_size": event_size,
-        "distance_to_nearest_parking": distance_to_nearest_parking
+        "distance_to_nearest_parking": distance_to_nearest_parking,
+        "hour": hour,
+        "minute_of_day": minute_of_day,
+        "weekday": weekday,
+        "is_weekend": is_weekend,
+        "is_holiday": is_holiday
     }
     st.json(inputs)
 

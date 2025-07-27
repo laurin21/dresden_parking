@@ -3,13 +3,13 @@ import pickle
 import glob
 from datetime import datetime, timedelta, date
 import holidays
+import pandas as pd
 
 st.set_page_config(page_title="Parking Model Inputs", layout="wide")
 
 # --- Parkplatznamen und Mapping auf Eingabewerte ---
 pkl_files = glob.glob("xgb_model_*.pkl")
 parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_files]
-
 
 # Mapping vom Dateinamen zur Modell-"Name" Variable
 name_mapping = {

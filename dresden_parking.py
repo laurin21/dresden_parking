@@ -343,7 +343,7 @@ else:
     map_data = []
     for res in results:
         parkplatz = res["Parkplatz"]
-        vorhersage = round(res["Vorhersage %"], 1)
+        vorhersage = round(res["Vorhersage %"], 2)  # auf zwei Nachkommastellen runden
         coords = coordinates_mapping.get(parkplatz)
         if coords:
             norm_value = (res["Vorhersage %"] - min_val) / range_val  # Skala 0-1
@@ -378,13 +378,3 @@ else:
 
     # Karte anzeigen
     st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
-
-    # Legende unterhalb der Karte mit zwei Spalten nebeneinander
-    st.subheader("Legende")
-    col_low, col_high = st.columns(2)
-    with col_low:
-        st.color_picker("Niedrig", "#00FF00", key="low_color", disabled=True)
-        st.write(f"Niedrig ({min_val:.1f}%)")
-    with col_high:
-        st.color_picker("Hoch", "#FF0000", key="high_color", disabled=True)
-        st.write(f"Hoch ({max_val:.1f}%)")

@@ -218,6 +218,8 @@ distance_mapping = {
 }
 
 rain_values = ['0.0', '0.01', '0.02', '0.03', '0.04', '0.05', '0.06', '0.07', '0.08', '0.09']
+description_values = ['Clear', 'Cloudy', 'Fair', 'Fog', 'Light Rain', 'Light Rain with Thunder', 'Mostly Cloudy', 'Partly Cloudy', 'Rain', 'Rain Shower', 'Showers in the Vicinity', 'Sunny', 'Thunder in the Vicinity', 'Thunderstorm']
+event_size_values = ['', 'large', 'medium', 'small', 'unknown']
 
 if not pkl_files:
     st.warning("Keine .pkl-Dateien im aktuellen Verzeichnis gefunden.")
@@ -250,12 +252,12 @@ else:
     # Eingaben für Modell (nur dynamische Inputs)
     st.subheader("Eingaben für Modell")
     temperature = st.number_input("Temperatur (°C)", value=20.0)
-    description = st.selectbox("Wetterbeschreibung", ["Clear", "Cloudy", "Rain", "Snow"])
+    description = st.selectbox("Wetterbeschreibung", description_values)
     humidity = st.slider("Luftfeuchtigkeit (%)", min_value=0, max_value=100, value=50)
     rain = st.selectbox("Regen (mm)", options=rain_values, format_func=lambda x: f"{x} mm")
     final_avg_occ = st.number_input("Durchschnittliche Belegung (%)", min_value=0.0, max_value=100.0, value=50.0)
     in_event_window = st.selectbox("In Event-Fenster?", [0, 1])
-    event_size = st.number_input("Eventgröße (Personen)", min_value=0, max_value=100000, step=100)
+    event_size = st.selectbox("Eventgröße", options=event_size_values)
 
     st.markdown("---")
     st.write("**Zusammenfassung der Eingaben:**")

@@ -9,3 +9,4 @@ xgboost
 holidays
 streamlit_folium
 folium
+pydeck

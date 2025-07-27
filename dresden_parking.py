@@ -349,6 +349,30 @@ else:
         st.map(map_df, latitude="lat", longitude="lon")
 
 
+    def create_map_dataframe(results):
+        map_data = []
+        for row in results:
+            coords = coordinates_mapping.get(row["Parkplatz"])
+            if coords:
+                occupancy = row["Vorhersage %"]
+                color = [int(255 * (occupancy/100)), int(255 * (1 - occupancy/100)), 0]  # rot-grün Verlauf
+                map_data.append({
+                    "lat": coords[1],
+                    "lon": coords[0],
+                    "occupancy": occupancy,
+                    "color": color
+                })
+        return pd.DataFrame(map_data)
+
+    # --- Hier wird die Karte direkt angezeigt, wenn results existiert ---
+    # results kommt aus dem bestehenden Modellcode
+    if "results" in st.session_state:
+        results = st.session_state.results
+        map_df = create_map_dataframe(results)
+        st.subheader("Karte der Parkplätze nach Vorhersage")
+        st.map(map_df, latitude="lat", longitude="lon")
+
+
     st.markdown("---")
     st.header("Vorhersagen für alle Parkplätze")
     st.dataframe(pd.DataFrame(results))

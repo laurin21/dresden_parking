@@ -4,6 +4,8 @@ import glob
 from datetime import datetime, timedelta, date
 import holidays
 import pandas as pd
+import folium
+from streamlit_folium import st_folium
 
 st.set_page_config(page_title="Parking Model Inputs", layout="wide")
 
@@ -327,6 +329,27 @@ else:
         
         prediction = model.predict(input_df)[0]
         results.append({"Parkplatz": model_name_value, "Vorhersage %": round(prediction, 2)})
+
+
+    st.header("Parkplatz-Vorhersagen auf Karte")
+    # Mittelpunkt der Karte (z. B. Altmarkt Dresden)
+    m = folium.Map(location=[51.0504, 13.7373], zoom_start=13)
+
+    # Marker mit Prediction-Ergebnissen hinzufügen
+    for res in results:
+        parkplatz = res["Parkplatz"]
+        vorhersage = res["Vorhersage %"]
+        coords = coordinates_mapping.get(parkplatz)
+        if coords:
+            folium.Marker(
+                location=[coords[1], coords[0]],  # folium: [lat, lon]
+                popup=f"{parkplatz}: {vorhersage}%",
+                tooltip=f"{parkplatz} ({vorhersage}%)"
+            ).add_to(m)
+
+    # Karte in Streamlit anzeigen
+    st_folium(m, width=800, height=600)
+
 
     st.markdown("---")
     st.header("Vorhersagen für alle Parkplätze")

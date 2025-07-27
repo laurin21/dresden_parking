@@ -4,8 +4,10 @@ import glob
 
 st.set_page_config(page_title="Parking Model Inputs", layout="wide")
 
-# --- Auswahl des Modells ---
-pkl_files = glob.glob("*.pkl")
+# --- Parkplatznamen aus Dateinamen ableiten ---
+pkl_files = glob.glob("xgb_model_*.pkl")
+parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_files]
+
 if not pkl_files:
     st.warning("Keine .pkl-Dateien im aktuellen Verzeichnis gefunden.")
 else:
@@ -29,7 +31,7 @@ else:
             st.error("Das Modell enthält keine Informationen über die erwarteten Inputs.")
 
         st.subheader("Eingaben für Modell (ohne Zeitfeatures)")
-        name = st.text_input("Name des Parkplatzes", "")
+        name = st.selectbox("Name des Parkplatzes", parking_names)
         capacity = st.number_input("Kapazität", min_value=0, max_value=10000, step=1)
         temperature = st.number_input("Temperatur (°C)", value=20.0)
         description = st.selectbox("Wetterbeschreibung", ["Clear", "Cloudy", "Rain", "Snow"])

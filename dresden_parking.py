@@ -217,14 +217,6 @@ distance_mapping = {
   "Wöhrl / Florentinum": 192.076243
 }
 
-# Automatische Zuweisung des Typs und Distanz
-type_ = type_mapping.get(model_name_value, "Unbekannt")
-distance_to_nearest_parking = distance_mapping.get(model_name_value, 0.0)
-
-district = district_mapping.get(selected_key, "Unbekannt")
-capacity = capacity_mapping.get(selected_key, 0)
-
-# Rain Werte als Mapping
 rain_values = ['0.0', '0.01', '0.02', '0.03', '0.04', '0.05', '0.06', '0.07', '0.08', '0.09']
 
 if not pkl_files:
@@ -233,16 +225,16 @@ else:
     # Dropdown für Parkplatzname -> gleichzeitig Modellwahl
     selected_key = st.selectbox("Parkplatz (Modell)", parking_names)
     selected_file = f"xgb_model_{selected_key}.pkl"
+
+    # Modellname aus Mapping
     model_name_value = name_mapping.get(selected_key, selected_key)
-
-    with open(selected_file, "rb") as f:
-        model = pickle.load(f)
-
-    # Automatisch gemappte Werte
     district = district_mapping.get(selected_key, "Unbekannt")
     capacity = capacity_mapping.get(selected_key, 0)
     type_ = type_mapping.get(model_name_value, "Unbekannt")
     distance_to_nearest_parking = distance_mapping.get(model_name_value, 0.0)
+
+    with open(selected_file, "rb") as f:
+        model = pickle.load(f)
 
     # --- Zeitfeatures automatisch bestimmen + Slider für Blick in Zukunft ---
     st.subheader("Zeiteinstellungen")
@@ -253,7 +245,7 @@ else:
     minute_of_day = prediction_time.hour * 60 + prediction_time.minute
     weekday = prediction_time.weekday()
     is_weekend = 1 if weekday >= 5 else 0
-    is_holiday = 0  # Platzhalter: echte Feiertagslogik kann hier ergänzt werden
+    is_holiday = 0
 
     # Eingaben für Modell (nur dynamische Inputs)
     st.subheader("Eingaben für Modell")
@@ -288,7 +280,6 @@ else:
     }
     st.json(inputs)
 
-    # --- Debugging Mode ---
     st.markdown("---")
     if st.toggle("Debugging Mode"):
         st.subheader("Debugging Informationen")

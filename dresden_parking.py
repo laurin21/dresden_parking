@@ -3,20 +3,21 @@ import pandas as pd
 import pydeck as pdk
 import pickle
 import glob
-import importlib
+import io
+import pickletools
 from datetime import datetime
 
 st.set_page_config(page_title="Parking in Dresden - Model Inputs", layout="wide")
 
-# --- Funktion, um fehlende Module abzufangen ---
-def safe_pickle_load(file_path):
-    try:
-        with open(file_path, "rb") as f:
-            return pickle.load(f)
-    except ModuleNotFoundError as e:
-        return str(e)
+# --- Roh-Analyse von pkl-Dateien ohne externe Bibliotheken ---
+def analyze_pickle_structure(file_path):
+    with open(file_path, 'rb') as f:
+        raw = f.read()
+    info = io.StringIO()
+    pickletools.dis(raw, out=info)
+    return info.getvalue()
 
-# --- Suche nach pkl-Dateien im aktuellen Repo ---
+# --- Suche nach pkl-Dateien ---
 pkl_files = glob.glob("*.pkl")
 
 if not pkl_files:
@@ -28,17 +29,7 @@ else:
     selected_file = st.selectbox("Wähle ein Modell:", pkl_files)
 
     if selected_file:
-        model = safe_pickle_load(selected_file)
-        st.subheader("Model Info")
-        if isinstance(model, str):
-            st.error(f"Modell konnte nicht geladen werden: {model}")
-        else:
-            st.write(model)
-            # Eingabe-Features anzeigen
-            if hasattr(model, "feature_names_in_"):
-                st.success("Das Modell erwartet folgende Features:")
-                st.write(list(model.feature_names_in_))
-            elif hasattr(model, "n_features_in_"):
-                st.warning(f"Keine Feature-Namen gespeichert. Das Modell erwartet {model.n_features_in_} Features.")
-            else:
-                st.error("Das Modell enthält keine Informationen über die erwarteten Inputs.")
+        st.subheader("Pickle Struktur Analyse")
+        structure_info = analyze_pickle_structure(selected_file)
+        st.text(structure_info)
+        st.info("Diese Rohanalyse zeigt die Struktur, auch wenn bestimmte Bibliotheken fehlen.")

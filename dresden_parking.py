@@ -6,7 +6,8 @@ import holidays
 import pandas as pd
 import folium
 import pydeck as pdk
-from streamlit_folium import st_folium
+import requests
+
 
 st.set_page_config(page_title="Parking Model Inputs", layout="wide")
 
@@ -332,8 +333,25 @@ else:
         results.append({"Parkplatz": model_name_value, "Vorhersage %": round(prediction, 2)})
     
     
-    
-    st.header("Parkplatz-Vorhersagen auf Karte")
+
+
+    try:
+        weather_url = "https://api.open-meteo.com/v1/forecast?latitude=51.0504&longitude=13.7373&current_weather=true"
+        response = requests.get(weather_url)
+        if response.status_code == 200:
+            weather_data = response.json().get("current_weather", {})
+            temperature = weather_data.get("temperature")
+            windspeed = weather_data.get("windspeed")
+            weather_text = f"Aktuelles Wetter in Dresden: {temperature}°C, Wind {windspeed} km/h"
+        else:
+            weather_text = "Wetterdaten konnten nicht geladen werden."
+    except Exception as e:
+        weather_text = f"Fehler beim Laden des Wetters: {e}"
+
+    # Wettertext oben anzeigen
+    st.write(weather_text)
+        
+    st.header("Map for parking in Dresden")
 
     # Normierte Werte (0 = minimal, 1 = maximal) berechnen
     vorhersagen = [res["Vorhersage %"] for res in results]

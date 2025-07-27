@@ -3,9 +3,18 @@ import pandas as pd
 import pydeck as pdk
 import pickle
 import glob
+import importlib
 from datetime import datetime
 
 st.set_page_config(page_title="Parking in Dresden - Model Inputs", layout="wide")
+
+# --- Funktion, um fehlende Module abzufangen ---
+def safe_pickle_load(file_path):
+    try:
+        with open(file_path, "rb") as f:
+            return pickle.load(f)
+    except ModuleNotFoundError as e:
+        return str(e)
 
 # --- Suche nach pkl-Dateien im aktuellen Repo ---
 pkl_files = glob.glob("*.pkl")
@@ -19,16 +28,17 @@ else:
     selected_file = st.selectbox("Wähle ein Modell:", pkl_files)
 
     if selected_file:
-        with open(selected_file, "rb") as f:
-            model = pickle.load(f)
+        model = safe_pickle_load(selected_file)
         st.subheader("Model Info")
-        st.write(model)
-
-        # Eingabe-Features anzeigen
-        if hasattr(model, "feature_names_in_"):
-            st.success("Das Modell erwartet folgende Features:")
-            st.write(list(model.feature_names_in_))
-        elif hasattr(model, "n_features_in_"):
-            st.warning(f"Keine Feature-Namen gespeichert. Das Modell erwartet {model.n_features_in_} Features.")
+        if isinstance(model, str):
+            st.error(f"Modell konnte nicht geladen werden: {model}")
         else:
-            st.error("Das Modell enthält keine Informationen über die erwarteten Inputs.")
+            st.write(model)
+            # Eingabe-Features anzeigen
+            if hasattr(model, "feature_names_in_"):
+                st.success("Das Modell erwartet folgende Features:")
+                st.write(list(model.feature_names_in_))
+            elif hasattr(model, "n_features_in_"):
+                st.warning(f"Keine Feature-Namen gespeichert. Das Modell erwartet {model.n_features_in_} Features.")
+            else:
+                st.error("Das Modell enthält keine Informationen über die erwarteten Inputs.")

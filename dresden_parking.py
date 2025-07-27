@@ -335,15 +335,15 @@ else:
     
     st.header("Parkplatz-Vorhersagen auf Karte")
 
-    # DataFrame vorbereiten mit Farbwert (0% = grün, 100% = rot)
+    # DataFrame vorbereiten mit invertierter Farbskala (0% = rot, 100% = grün)
     map_data = []
     for res in results:
         parkplatz = res["Parkplatz"]
         vorhersage = round(res["Vorhersage %"], 1)  # auf eine Nachkommastelle runden
         coords = coordinates_mapping.get(parkplatz)
         if coords:
-            r = int((vorhersage / 100) * 255)
-            g = int((1 - vorhersage / 100) * 255)
+            r = int((1 - vorhersage / 100) * 255)
+            g = int((vorhersage / 100) * 255)
             b = 0
             map_data.append({
                 "lat": coords[1],

@@ -288,8 +288,8 @@ else:
 
     # --- Prediction durchführen ---
     feature_order = list(model.feature_names_in_) if hasattr(model, "feature_names_in_") else list(inputs.keys())
-    input_vector = [[inputs[feat] for feat in feature_order]]
-    prediction = model.predict(input_vector)[0]
+    input_df = pd.DataFrame([inputs], columns=feature_order)
+    prediction = model.predict(input_df)[0]
 
     st.markdown("---")
     st.header(f"Vorhergesagte Belegung: {prediction:.2f} %")

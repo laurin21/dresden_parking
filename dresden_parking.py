@@ -228,33 +228,18 @@ sachsen_holidays = holidays.Germany(prov='SN')
 if not pkl_files:
     st.warning("Keine .pkl-Dateien im aktuellen Verzeichnis gefunden.")
 else:
-    # Dropdown für Parkplatzname -> gleichzeitig Modellwahl
-    selected_key = st.selectbox("Parkplatz (Modell)", parking_names)
-    selected_file = f"xgb_model_{selected_key}.pkl"
-
-    # Modellname aus Mapping
-    model_name_value = name_mapping.get(selected_key, selected_key)
-    district = district_mapping.get(selected_key, "Unbekannt")
-    capacity = capacity_mapping.get(selected_key, 0)
-    type_ = type_mapping.get(model_name_value, "Unbekannt")
-    distance_to_nearest_parking = distance_mapping.get(model_name_value, 0.0)
-
-    with open(selected_file, "rb") as f:
-        model = pickle.load(f)
-
-    # --- Zeitfeatures automatisch bestimmen + Slider für Blick in Zukunft ---
+    # --- Zeitfeatures ---
     st.subheader("Zeiteinstellungen")
     minutes_ahead = st.slider("Vorhersagezeitraum (in Minuten, bis 48h)", min_value=0, max_value=48*60, value=0, step=5)
     prediction_time = datetime.now() + timedelta(minutes=minutes_ahead)
-
     hour = prediction_time.hour
     minute_of_day = prediction_time.hour * 60 + prediction_time.minute
     weekday = prediction_time.weekday()
     is_weekend = 1 if weekday >= 5 else 0
     is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
 
-    # Eingaben für Modell (nur dynamische Inputs)
-    st.subheader("Eingaben für Modell")
+    # --- Eingaben für alle Modelle ---
+    st.subheader("Allgemeine Eingaben")
     temperature = st.number_input("Temperatur (°C)", value=20.0)
     description = st.selectbox("Wetterbeschreibung", description_values)
     humidity = st.slider("Luftfeuchtigkeit (%)", min_value=0, max_value=100, value=50)
@@ -263,56 +248,44 @@ else:
     in_event_window = st.selectbox("In Event-Fenster?", [0, 1])
     event_size = st.selectbox("Eventgröße", options=event_size_values)
 
+    results = []
+    for model_file, key in zip(pkl_files, parking_names):
+        with open(model_file, "rb") as f:
+            model = pickle.load(f)
+        
+        model_name_value = name_mapping.get(key, key)
+        inputs = {
+            "Name": model_name_value,
+            "Capacity": float(capacity_mapping.get(key, 0)),
+            "Temperature": float(temperature),
+            "Description": description,
+            "Humidity": float(humidity),
+            "Rain": float(rain),
+            "District": district_mapping.get(key, "Unbekannt"),
+            "Type": type_mapping.get(model_name_value, "Unbekannt"),
+            "final_avg_occ": float(final_avg_occ),
+            "in_event_window": int(in_event_window),
+            "event_size": event_size,
+            "distance_to_nearest_parking": float(distance_mapping.get(model_name_value, 0.0)),
+            "hour": float(hour),
+            "minute_of_day": float(minute_of_day),
+            "weekday": float(weekday),
+            "is_weekend": float(is_weekend),
+            "is_holiday": float(is_holiday)
+        }
+
+        feature_order = list(model.feature_names_in_) if hasattr(model, "feature_names_in_") else list(inputs.keys())
+        input_df = pd.DataFrame([[inputs[f] for f in feature_order]], columns=feature_order)
+        for col in input_df.select_dtypes(include=['object']).columns:
+            input_df[col] = input_df[col].astype('category')
+        
+        prediction = model.predict(input_df)[0]
+        results.append({"Parkplatz": model_name_value, "Vorhersage %": round(prediction, 2)})
+
     st.markdown("---")
-    st.write("**Zusammenfassung der Eingaben:**")
-    inputs = {
-        "Name": model_name_value,
-        "Capacity": float(capacity),
-        "Temperature": float(temperature),
-        "Description": description,
-        "Humidity": float(humidity),
-        "Rain": float(rain),
-        "District": district,
-        "Type": type_,
-        "final_avg_occ": float(final_avg_occ),
-        "in_event_window": int(in_event_window),
-        "event_size": event_size,
-        "distance_to_nearest_parking": float(distance_to_nearest_parking),
-        "hour": float(hour),
-        "minute_of_day": float(minute_of_day),
-        "weekday": float(weekday),
-        "is_weekend": float(is_weekend),
-        "is_holiday": float(is_holiday)
-    }
-    st.json(inputs)
+    st.header("Vorhersagen für alle Parkplätze")
+    st.dataframe(pd.DataFrame(results))
 
-    # --- Prediction durchführen ---
-    feature_order = list(model.feature_names_in_) if hasattr(model, "feature_names_in_") else list(inputs.keys())
-
-    # Alle Strings zu Kategorien umwandeln
-    input_df = pd.DataFrame([[inputs[f] for f in feature_order]], columns=feature_order)
-    for col in input_df.select_dtypes(include=['object']).columns:
-        input_df[col] = input_df[col].astype('category')
-
-    prediction = model.predict(input_df)[0]
-
-    st.markdown("---")
-    st.header(f"Vorhergesagte Belegung: {prediction:.2f} %")
-
-    # --- Debugging Mode ---
     if st.toggle("Debugging Mode"):
-        st.subheader("Aktuelle Input-Werte als Tabelle")
-        st.table(pd.DataFrame(list(inputs.items()), columns=["Feature", "Wert"]))
-
-        st.subheader("Debugging Informationen")
-        st.write(model)
-        if hasattr(model, "feature_names_in_"):
-            st.success("Das Modell erwartet folgende Features:")
-            st.write(list(model.feature_names_in_))
-        if hasattr(model, "feature_types_"):
-            st.success("Datentypen der Features laut Modell:")
-            st.write(list(model.feature_types_))
-        elif hasattr(model, "n_features_in_"):
-            st.warning(f"Keine Feature-Typen gespeichert. Das Modell erwartet {model.n_features_in_} Features.")
-        else:
-            st.error("Das Modell enthält keine Informationen über die erwarteten Inputs.")
+        st.subheader("Beispiel-Input für letztes Modell")
+        st.json(inputs)

@@ -3,7 +3,7 @@ import pickle
 import glob
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="Parking Model Inputs", layout="wide")
+st.set_page_config(page_title="🚗 Parking in Dresden", layout="wide")
 
 # --- Parkplatznamen und Mapping auf Eingabewerte ---
 pkl_files = glob.glob("xgb_model_*.pkl")

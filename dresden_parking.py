@@ -3,7 +3,7 @@ import pickle
 import glob
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="🚗 Parking in Dresden", layout="wide")
+st.set_page_config(page_title="Parking Model Inputs", layout="wide")
 
 # --- Parkplatznamen und Mapping auf Eingabewerte ---
 pkl_files = glob.glob("xgb_model_*.pkl")
@@ -51,6 +51,9 @@ name_mapping = {
     "Wöhrl___Florentinum": "Wöhrl / Florentinum"
 }
 
+# Rain Werte als Mapping
+rain_values = ['0.0', '0.01', '0.02', '0.03', '0.04', '0.05', '0.06', '0.07', '0.08', '0.09']
+
 if not pkl_files:
     st.warning("Keine .pkl-Dateien im aktuellen Verzeichnis gefunden.")
 else:
@@ -79,7 +82,7 @@ else:
     temperature = st.number_input("Temperatur (°C)", value=20.0)
     description = st.selectbox("Wetterbeschreibung", ["Clear", "Cloudy", "Rain", "Snow"])
     humidity = st.slider("Luftfeuchtigkeit (%)", min_value=0, max_value=100, value=50)
-    rain = st.number_input("Regen (mm)", value=0.0)
+    rain = st.selectbox("Regen (mm)", options=rain_values, format_func=lambda x: f"{x} mm")
     district = st.text_input("Stadtbezirk", "")
     type_ = st.selectbox("Parkplatztyp", ["Tiefgarage", "Parkhaus", "Freifläche"])
     final_avg_occ = st.number_input("Durchschnittliche Belegung (%)", min_value=0.0, max_value=100.0, value=50.0)
@@ -95,7 +98,7 @@ else:
         "Temperature": temperature,
         "Description": description,
         "Humidity": humidity,
-        "Rain": rain,
+        "Rain": float(rain),
         "District": district,
         "Type": type_,
         "final_avg_occ": final_avg_occ,

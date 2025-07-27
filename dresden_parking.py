@@ -5,16 +5,59 @@ from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Parking Model Inputs", layout="wide")
 
-# --- Parkplatznamen und Modell-Dateien ---
+# --- Parkplatznamen und Mapping auf Eingabewerte ---
 pkl_files = glob.glob("xgb_model_*.pkl")
 parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_files]
+
+# Mapping vom Dateinamen zur Modell-"Name" Variable
+name_mapping = {
+    "Altmarkt": "Altmarkt",
+    "Altmarkt_-_Galerie": "Altmarkt - Galerie",
+    "An_der_Frauenkirche": "An der Frauenkirche",
+    "Budapester_Straße": "Budapester Straße",
+    "Centrum_-_Galerie": "Centrum - Galerie",
+    "Cossebaude": "Cossebaude",
+    "Ferdinandplatz": "Ferdinandplatz",
+    "Fidelio-F.-Finke-Straße": "Fidelio-F.-Finke-Straße",
+    "Frauenkirche___Neumarkt": "Frauenkirche / Neumarkt",
+    "GALERIA_Karstadt_Kaufhof": "GALERIA Karstadt Kaufhof",
+    "Grenzstraße": "Grenzstraße",
+    "Haus_am_Zwinger": "Haus am Zwinger",
+    "Kaditz": "Kaditz",
+    "Klotzsche": "Klotzsche",
+    "Kongresszentrum": "Kongresszentrum",
+    "Langebrück": "Langebrück",
+    "MESSE_DRESDEN_Parkplatz_P7": "MESSE DRESDEN Parkplatz P7",
+    "Ostra-Ufer": "Ostra-Ufer",
+    "Parkhaus_Mitte": "Parkhaus Mitte",
+    "Pennrich": "Pennrich",
+    "Pieschener_Allee_Bus": "Pieschener Allee Bus",
+    "Pirnaischer_Platz": "Pirnaischer Platz",
+    "Prohlis": "Prohlis",
+    "Reick": "Reick",
+    "Reitbahnstraße": "Reitbahnstraße",
+    "SP1_Straßburger_Platz": "SP1 Straßburger Platz",
+    "SachsenEnergie_Center": "SachsenEnergie Center",
+    "Sarrasanistraße": "Sarrasanistraße",
+    "Schießgasse": "Schießgasse",
+    "Semperoper": "Semperoper",
+    "Stadtforum_Dresden": "Stadtforum Dresden",
+    "Strehlener_Straße": "Strehlener Straße",
+    "Taschenbergpalais": "Taschenbergpalais",
+    "Theresienstraße": "Theresienstraße",
+    "Wiener_Platz___Hauptbahnhof": "Wiener Platz / Hauptbahnhof",
+    "Wiesentorstraße": "Wiesentorstraße",
+    "World_Trade_Center": "World Trade Center",
+    "Wöhrl___Florentinum": "Wöhrl / Florentinum"
+}
 
 if not pkl_files:
     st.warning("Keine .pkl-Dateien im aktuellen Verzeichnis gefunden.")
 else:
     # Dropdown für Parkplatzname -> gleichzeitig Modellwahl
-    selected_name = st.selectbox("Name des Parkplatzes", parking_names)
-    selected_file = f"xgb_model_{selected_name}.pkl"
+    selected_key = st.selectbox("Parkplatz (Modell)", parking_names)
+    selected_file = f"xgb_model_{selected_key}.pkl"
+    model_name_value = name_mapping.get(selected_key, selected_key)
 
     with open(selected_file, "rb") as f:
         model = pickle.load(f)
@@ -47,7 +90,7 @@ else:
     st.markdown("---")
     st.write("**Zusammenfassung der Eingaben:**")
     inputs = {
-        "Name": selected_name,
+        "Name": model_name_value,
         "Capacity": capacity,
         "Temperature": temperature,
         "Description": description,

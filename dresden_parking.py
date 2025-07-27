@@ -328,49 +328,28 @@ else:
         prediction = model.predict(input_df)[0]
         results.append({"Parkplatz": model_name_value, "Vorhersage %": round(prediction, 2)})
 
-    def create_map_dataframe(results):
-        map_data = []
-        for row in results:
-            coords = coordinates_mapping.get(row["Parkplatz"])
-            if coords:
-                # Farbe anhand der Belegung bestimmen (Rot = >70%, sonst Grün)
-                fill_color = "#FF0000" if row["Vorhersage %"] > 70 else "#00FF00"
-                map_data.append({
-                    "lat": coords[1],
-                    "lon": coords[0],
-                    "size": 100,
-                    "fill_color": fill_color
-                })
-        return pd.DataFrame(map_data)
-
-    # Nutzung des DataFrames in der Streamlit-App
-    def show_map(results):
-        map_df = create_map_dataframe(results)
-        st.map(map_df, latitude="lat", longitude="lon")
 
 
-    def create_map_dataframe(results):
-        map_data = []
-        for row in results:
-            coords = coordinates_mapping.get(row["Parkplatz"])
-            if coords:
-                occupancy = row["Vorhersage %"]
-                color = [int(255 * (occupancy/100)), int(255 * (1 - occupancy/100)), 0]  # rot-grün Verlauf
-                map_data.append({
-                    "lat": coords[1],
-                    "lon": coords[0],
-                    "occupancy": occupancy,
-                    "color": color
-                })
-        return pd.DataFrame(map_data)
+    # --- Karte mit Vorhersagen ---
+    st.header("Parkplatz-Vorhersagen auf Karte")
 
-    # --- Hier wird die Karte direkt angezeigt, wenn results existiert ---
-    # results kommt aus dem bestehenden Modellcode
-    if "results" in st.session_state:
-        results = st.session_state.results
-        map_df = create_map_dataframe(results)
-        st.subheader("Karte der Parkplätze nach Vorhersage")
-        st.map(map_df, latitude="lat", longitude="lon")
+    # Mittelpunkt der Karte (z. B. Altmarkt Dresden)
+    m = folium.Map(location=[51.0504, 13.7373], zoom_start=13)
+
+    # Marker mit Prediction-Ergebnissen hinzufügen
+    for res in results:
+        parkplatz = res["Parkplatz"]
+        vorhersage = res["Vorhersage %"]
+        coords = coordinates_mapping.get(parkplatz)
+        if coords:
+            folium.Marker(
+                location=[coords[1], coords[0]],  # folium: [lat, lon]
+                popup=f"{parkplatz}: {vorhersage}%",
+                tooltip=f"{parkplatz} ({vorhersage}%)"
+            ).add_to(m)
+
+    # Karte in Streamlit anzeigen
+    st_folium(m, width=800, height=600)
 
 
     st.markdown("---")

@@ -335,7 +335,6 @@ else:
     
 
 
-    # --- Aktuelles Wetter für Dresden laden ---
     try:
         weather_url = "https://api.open-meteo.com/v1/forecast?latitude=51.0504&longitude=13.7373&current_weather=true"
         response = requests.get(weather_url)
@@ -351,12 +350,8 @@ else:
 
     # Wettertext oben anzeigen
     st.write(weather_text)
-
-    # Refresh Button für die Berechnungen
-    if st.button("🔄 Vorhersagen neu berechnen"):
-        st.experimental_rerun()
-
-    st.header("Parkplatz-Vorhersagen auf Karte")
+        
+    st.header("Map for parking in Dresden")
 
     # Normierte Werte (0 = minimal, 1 = maximal) berechnen
     vorhersagen = [res["Vorhersage %"] for res in results]

@@ -346,15 +346,24 @@ else:
                 popup=f"{parkplatz}: {vorhersage}%",
                 tooltip=f"{parkplatz} ({vorhersage}%)"
             ).add_to(m)
+    # --- Karte mit Vorhersagen ---
+    st.header("Parkplatz-Vorhersagen auf Karte")
 
-    # Karte in Streamlit anzeigen
-    st_folium(m, width=800, height=600)
+    # DataFrame für st.map vorbereiten
+    map_data = []
+    for res in results:
+        parkplatz = res["Parkplatz"]
+        vorhersage = res["Vorhersage %"]
+        coords = coordinates_mapping.get(parkplatz)
+        if coords:
+            map_data.append({
+                "lat": coords[1],
+                "lon": coords[0],
+                "Parkplatz": parkplatz,
+                "Vorhersage %": vorhersage
+            })
 
+    map_df = pd.DataFrame(map_data)
 
-    st.markdown("---")
-    st.header("Vorhersagen für alle Parkplätze")
-    st.dataframe(pd.DataFrame(results))
-
-    if st.toggle("Debugging Mode"):
-        st.subheader("Beispiel-Input für letztes Modell")
-        st.json(inputs)
+    # Karte anzeigen (st.map nutzt automatisch lat/lon)
+    st.map(map_df, zoom=13)

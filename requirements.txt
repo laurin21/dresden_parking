@@ -7,4 +7,5 @@ playwright
 beautifulsoup4
 xgboost
 holidays
+streamlit_folium
 folium

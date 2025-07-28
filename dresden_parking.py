@@ -78,7 +78,7 @@ with col_time:
 with col_event:
     in_event_window = st.toggle("Event in 600 m radius?", value=False)
     if in_event_window:
-        raw_event_size = st.selectbox("Event size", options=event_size_values)
+        raw_event_size = st.pills("Event size", options=event_size_values)
         event_size = event_size_display_mapping.get(raw_event_size)
     else:
         event_size = None

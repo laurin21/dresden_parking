@@ -136,9 +136,8 @@ col_selected, col_min, col_max = st.columns([1, 1, 1], border=False)
 # Selected parking KPI
 with col_selected:
     if selected_prediction is not None:
-        st.markdown("Predicted occupation for")
-        st.markdown(f"\"**{selected_parking_display}**\"")
-        st.metric(label="", value=f"{int(selected_prediction*100)}%")
+        st.markdown("Predicted occupation for selection")
+        st.metric(label=f"{selected_parking_display}", value=f"{int(selected_prediction*100)}%")
 
 # Determine min and max predictions
 if results:

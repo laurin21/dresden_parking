@@ -161,7 +161,7 @@ for res in results:
             "lon": coords[0],
             "Parkplatz": parkplatz,
             # als String mit 2 Nachkommastellen für Tooltip
-            "Vorhersage %": f"{vorhersage_rounded:.2f}",  
+            "Vorhersage %": f"{vorhersage_rounded:.2f} occupation",  
             "color": [r, g, 0]
         })
 

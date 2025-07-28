@@ -1,7 +1,8 @@
 import streamlit as st
 import pickle
 import glob
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
+import pytz
 import holidays
 import pandas as pd
 import folium
@@ -84,7 +85,8 @@ if not pkl_files:
 else:
     st.subheader("User input")
     minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", min_value=0, max_value=48*60, value=0, step=5)
-    prediction_time = datetime.now() + timedelta(minutes=minutes_ahead)
+    local_tz = pytz.timezone("Europe/Berlin")
+    prediction_time = datetime.now(timezone.utc).astimezone(local_tz) + timedelta(minutes=minutes_ahead)    
     hour = prediction_time.hour
     minute_of_day = prediction_time.hour * 60 + prediction_time.minute
     weekday = prediction_time.weekday()

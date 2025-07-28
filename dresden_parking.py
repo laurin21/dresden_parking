@@ -131,7 +131,7 @@ if selected_prediction is not None:
 
 # --- KPIs ---
 st.markdown("---")
-col_selected, col_min, col_max = st.columns([1, 1, 1], border=False)
+col_selected, col_min, col_max = st.columns([1, 1, 1], border=True)
 
 # Selected parking KPI
 with col_selected:

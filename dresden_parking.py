@@ -124,7 +124,7 @@ for model_file, key in zip(pkl_files, parking_names):
 st.markdown("---")
 if selected_prediction is not None:
     st.metric(
-        label=f"Predicted occupation for \n \" {selected_parking_display}\"",
+        label=f"Predicted occupation for\n\" {selected_parking_display}\"",
         value=f"{selected_prediction:.2f}%"
     )
 

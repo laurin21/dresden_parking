@@ -108,7 +108,7 @@ else:
 
 
     # --- Event request ---
-    in_event_window = st.selectbox("Event in 600 m radius?", [0, 1])
+    in_event_window = st.toggle("Event in 600 m radius?", [0, 1])
     if in_event_window == 1:
         event_size = st.selectbox("Event size", options=event_size_values)
     else:
@@ -181,19 +181,3 @@ if show_debug:
     st.json(inputs)
     st.subheader("All prediction results")
     st.dataframe(pd.DataFrame(results))
-
-    st.markdown("---")
-
-    mapped_name = name_mapping.get(key, key)
-    rounded_minute = 5 * round(minute_of_day / 5)
-
-    st.write(f"--- DEBUG für Parkplatz: {key} ---")
-    st.write(f"Mapped Name: {mapped_name}")
-    st.write(f"Minute of Day: {minute_of_day}")
-    st.write(f"Rounded Minute: {rounded_minute}")
-    st.write(f"Parking keys in occupancy_mapping vorhanden?: {mapped_name in occupancy_mapping}")
-    if mapped_name in occupancy_mapping:
-        st.write(f"Beispiel Minutenkeys: {list(occupancy_mapping[mapped_name].keys())[:10]}")
-        st.write(f"Wert für Rounded Minute: {occupancy_mapping[mapped_name].get(rounded_minute, 'Nicht vorhanden')}")
-    else:
-        st.write("Parkplatz nicht im occupancy_mapping gefunden!")

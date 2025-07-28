@@ -200,6 +200,10 @@ view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
 
 # --- Legende für die Karte ---
+
+st.markdown("<div style='width:20px;height:20px;background-color:rgb(0,255,0)'></div> Low predicted occupation <div style='width:20px;height:20px;background-color:rgb(255,255,0)'></div> Medium predicted occupation <div style='width:20px;height:20px;background-color:rgb(255,0,0)'></div> High predicted occupation", unsafe_allow_html=True)
+
+
 col1, col2, col3= st.columns([1, 1, 1])
 with col1:
     st.markdown("<div style='width:20px;height:20px;background-color:rgb(0,255,0)'></div> Low predicted occupation", unsafe_allow_html=True)

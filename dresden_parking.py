@@ -351,26 +351,25 @@ else:
         
     st.header("Map for parking in Dresden")
 
-    # Normierte Werte (0 = minimal, 1 = maximal) berechnen
-    vorhersagen = [res["Prediction %"] for res in results]
+    vorhersagen = [res.get("Vorhersage %", res.get("Prediction %", 0)) for res in results]
     min_val, max_val = min(vorhersagen), max(vorhersagen)
     range_val = max_val - min_val if max_val != min_val else 1
 
     map_data = []
     for res in results:
-        parkplatz = res["Parking lot"]
-        vorhersage = round(res["Prediction %"], 2)  # auf zwei Nachkommastellen runden
+        parkplatz = res.get("Parkplatz", res.get("Parking lot", "Unbekannt"))
+        vorhersage = round(res.get("Vorhersage %", res.get("Prediction %", 0)), 2)
         coords = coordinates_mapping.get(parkplatz)
         if coords:
-            norm_value = (res["Prediction %"] - min_val) / range_val  # Skala 0-1
+            norm_value = (vorhersage - min_val) / range_val  # Skala 0-1
             r = int(norm_value * 255)
             g = int((1 - norm_value) * 255)
             b = 0
             map_data.append({
                 "lat": coords[1],
                 "lon": coords[0],
-                "Parking lot": parkplatz,
-                "Prediction %": vorhersage,
+                "Parkplatz": parkplatz,
+                "Vorhersage %": vorhersage,
                 "color": [r, g, b]
             })
 
@@ -386,7 +385,7 @@ else:
     )
 
     tooltip = {
-        "html": "<b>{Parkplatz}</b><br/>Prediction: {Prediction %}%",
+        "html": "<b>{Parkplatz}</b><br/>Vorhersage: {Vorhersage %}%",
         "style": {"backgroundColor": "steelblue", "color": "white"}
     }
 

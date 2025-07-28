@@ -29,9 +29,11 @@ parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_fi
 
 # --- Wetterdaten von Open-Meteo API ---
 try:
-    weather_url = ("https://api.open-meteo.com/v1/forecast"
-                   "?latitude=51.0504&longitude=13.7373"
-                   "&current_weather=true&hourly=weathercode,precipitation")
+    weather_url = (
+    "https://api.open-meteo.com/v1/forecast"
+    "?latitude=51.0504&longitude=13.7373"
+    "&current_weather=true&hourly=weathercode,precipitation,relativehumidity_2m")
+
     response = requests.get(weather_url)
     if response.status_code == 200:
         weather_data = response.json()
@@ -40,18 +42,28 @@ try:
         windspeed = current_weather.get("windspeed")
         weather_code = current_weather.get("weathercode")
 
-        # Niederschlag ermitteln (aktueller Zeitpunkt)
-        precipitation_series = weather_data.get("hourly", {}).get("precipitation", [])
+        ## Humidity extrahieren (aktueller Zeitpunkt)
+        humidity_series = weather_data.get("hourly", {}).get("relativehumidity_2m", [])
+        rain_series = weather_data.get("hourly", {}).get("precipitation", [])
         hourly_times = weather_data.get("hourly", {}).get("time", [])
+
         rain_api = 0.0
-        if hourly_times and precipitation_series:
-            # Aktuelle Zeit finden
+        humidity_api = 50.0
+        if hourly_times:
             now_str = datetime.utcnow().replace(minute=0, second=0, microsecond=0).isoformat() + "Z"
             if now_str in hourly_times:
                 idx = hourly_times.index(now_str)
-                rain_api = precipitation_series[idx]
+                if rain_series:
+                    rain_api = rain_series[idx]
+                if humidity_series:
+                    humidity_api = humidity_series[idx]
+
         description_auto = weather_code_mapping.get(weather_code, "Unknown")
-        weather_text = f"Current weather in Dresden: {temperature_api}°C, wind {windspeed} km/h, {description_auto}, rain {rain_api} mm"
+        weather_text = (
+            f"Current weather in Dresden: {temperature_api}°C, "
+            f"wind {windspeed} km/h, {description_auto}, "
+            f"rain {rain_api} mm, humidity {humidity_api}%"
+        )
     else:
         weather_text = "Weather data failed to load."
         description_auto = "Clear"
@@ -82,7 +94,7 @@ else:
     temperature = temperature_api
     rain = rain_api
     description = description_auto
-    humidity = st.slider("Humidity (%)", min_value=0, max_value=100, value=50)
+    humidity = humidity_api
     final_avg_occ = st.number_input("Average occupation (%)", min_value=0.0, max_value=100.0, value=50.0)
     in_event_window = st.selectbox("Event in 300m radius??", [0, 1])
     event_size = st.selectbox("Event size", options=event_size_values)

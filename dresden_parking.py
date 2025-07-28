@@ -123,8 +123,8 @@ for model_file, key in zip(pkl_files, parking_names):
 # --- Einzelanzeige ---
 st.markdown("---")
 if selected_prediction is not None:
-    # st.metric erlaubt keine Zeilenumbrüche in label -> Workaround mit zusätzlichem Markdown-Text
-    st.markdown(f"Predicted occupation for \"{selected_parking_display}\"", unsafe_allow_html=True)
+    st.markdown(f"Predicted occupation for")
+    st.markdown("\"**{selected_parking_display}\"**")
     st.metric(label="", value=f"{selected_prediction:.2f}%")
 
 # --- Karte ---

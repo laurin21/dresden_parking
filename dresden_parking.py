@@ -102,7 +102,6 @@ else:
 
 st.markdown("---")
 
-
 results = []
 for model_file, key in zip(pkl_files, parking_names):
     with open(model_file, "rb") as f:
@@ -155,7 +154,7 @@ for res in results:
         norm_value = (vorhersage - min_val) / range_val
         r = int(norm_value * 255)
         g = int((1 - norm_value) * 255)
-        map_data.append({"lat": coords[1], "lon": coords[0], "Parkplatz": parkplatz, "Vorhersage %": vorhersage, "color": [r, g, 0]})
+        map_data.append({"lat": coords[1], "lon": coords[0], "Parkplatz": parkplatz, "Prediction %": round(vorhersage, 2), "color": [r, g, 0]})
 map_df = pd.DataFrame(map_data)
 scatter_layer = pdk.Layer("ScatterplotLayer", data=map_df, get_position="[lon, lat]", get_fill_color="color", get_radius=50, pickable=True)
 tooltip = {"html": "<b>{Parkplatz}</b><br/>Vorhersage: {Vorhersage %}%", "style": {"backgroundColor": "steelblue", "color": "white"}}

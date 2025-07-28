@@ -16,7 +16,7 @@ st.set_page_config(page_title="Dresden Parking", layout="wide")
 # --- Parkplatznamen und Mapping auf Eingabewerte ---
 pkl_files = glob.glob("xgb_model_*.pkl")
 parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_files]
-
+parking_display_names = [name_mapping.get(p, p) for p in parking_names]
 
 # --- Wetterdaten von Open-Meteo API ---
 weather_url = (
@@ -69,8 +69,7 @@ with col_event:
         raw_event_size = st.pills(
             "Event size",
             options=[x for x in event_size_values if x],  # "" rausfiltern
-            format_func=lambda x: event_size_display_mapping.get(x, x),
-            value = "Medium"
+            format_func=lambda x: event_size_display_mapping.get(x, x)
         )
         event_size = raw_event_size  # Modell bekommt Originalwert
     else:
@@ -97,9 +96,12 @@ def get_occupancy_value(parking_key, minute_of_day):
     return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
 
 
+selected_parking_display = st.selectbox("Select parking lot", parking_display_names)
+selected_parking = parking_names[parking_display_names.index(selected_parking_display)]
+
 st.markdown("---")
 
-results = []
+selected_prediction = None
 for model_file, key in zip(pkl_files, parking_names):
     with open(model_file, "rb") as f:
         model = pickle.load(f)
@@ -107,15 +109,15 @@ for model_file, key in zip(pkl_files, parking_names):
     inputs = {
         "Name": model_name_value,
         "Capacity": float(capacity_mapping.get(key, 0)),
-        "Temperature": float(temperature),
-        "Description": description,
-        "Humidity": float(humidity),
-        "Rain": float(rain),
+        "Temperature": float(temperature_api),
+        "Description": description_auto,
+        "Humidity": float(humidity_api),
+        "Rain": float(rain_api),
         "District": district_mapping.get(key, "Unbekannt"),
         "Type": type_mapping.get(model_name_value, "Unbekannt"),
         "final_avg_occ": float(get_occupancy_value(key, minute_of_day)),
-        "in_event_window": int(in_event_window),
-        "event_size": event_size,
+        "in_event_window": int(in_event_window if key == selected_parking else 0),
+        "event_size": event_size if key == selected_parking else None,
         "distance_to_nearest_parking": float(distance_mapping.get(model_name_value, 0.0)),
         "hour": float(hour),
         "minute_of_day": float(minute_of_day),
@@ -123,20 +125,19 @@ for model_file, key in zip(pkl_files, parking_names):
         "is_weekend": float(is_weekend),
         "is_holiday": float(is_holiday)
     }
-
     feature_order = list(model.feature_names_in_) if hasattr(model, "feature_names_in_") else list(inputs.keys())
-
-    # Fehlende Features abfangen
-    missing_features = [f for f in feature_order if f not in inputs]
-    if missing_features:
-        st.warning(f"Missing features for model {model_name_value}: {missing_features}")
-    # DataFrame erstellen, fehlende Features auf None setzen
     input_df = pd.DataFrame([[inputs.get(f, None) for f in feature_order]], columns=feature_order)
     for col in input_df.select_dtypes(include=['object']).columns:
         input_df[col] = input_df[col].astype('category')
-
     prediction = model.predict(input_df)[0]
     results.append({"Parkplatz": model_name_value, "Vorhersage %": round(prediction, 2)})
+    if key == selected_parking:
+        selected_prediction = round(prediction, 2)
+
+# --- Einzelanzeige ---
+if selected_prediction is not None:
+    st.markdown(f"### Prediction for **{selected_parking_display}**: {selected_prediction:.2f} occupation")
+
 
 # --- Karte ---
 vorhersagen = [res.get("Vorhersage %", res.get("Prediction %", 0)) for res in results]

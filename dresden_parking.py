@@ -129,7 +129,7 @@ st.markdown("---")
 col_selected, col_min, col_max = st.columns([1, 1, 1], border=False)
 with col_selected:
     if selected_prediction is not None:
-        st.markdown(f"Predicted occupation for selected parking lot")
+        st.markdown(f"Predicted occupation for selection")
         st.metric(label=f"{selected_parking_display}", value=f"{selected_prediction:.2f}%")
 
 with col_min:

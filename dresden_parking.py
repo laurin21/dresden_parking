@@ -62,7 +62,7 @@ description_auto = weather_code_mapping.get(weather_code, "Unknown")
 sachsen_holidays = holidays.Germany(prov='SN')
 
 st.subheader("User input")
-col_time, col_event = st.columns([1, 1])  # zwei gleich breite Spalten
+col_time, col_event = st.columns([1, 1], border = True)
 
 with col_time:
     minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", min_value=0, max_value=48*60, value=120, step=5)

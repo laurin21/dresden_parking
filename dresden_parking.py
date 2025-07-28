@@ -394,3 +394,12 @@ else:
 
     # Karte anzeigen
     st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
+
+# Toggle Debugging Mode
+show_debug = st.toggle("Debugging Mode")
+if show_debug:
+    st.subheader("Final model input for last prediction")
+    st.json(inputs)
+
+    st.subheader("All prediction results")
+    st.dataframe(pd.DataFrame(results))

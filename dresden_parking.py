@@ -8,18 +8,7 @@ import pandas as pd
 import pydeck as pdk
 import requests
 
-from mappings import (
-    coordinates_mapping,
-    name_mapping,
-    district_mapping,
-    capacity_mapping,
-    type_mapping,
-    distance_mapping,
-    weather_code_mapping,
-    event_size_values,
-    occupancy_mapping,
-    event_size_display_mapping
-)
+from mappings import *
 
 st.set_page_config(page_title="Dresden Parking", layout="wide")
 
@@ -133,6 +122,10 @@ for model_file, key in zip(pkl_files, parking_names):
     if key == selected_parking:
         selected_prediction = round(prediction, 2)
 
+# --- Einzelanzeige ---
+if selected_prediction is not None:
+    st.markdown(f"### Prediction for **{selected_parking_display}**: {selected_prediction:.2f} occupation")
+
 # --- Karte ---
 vorhersagen = [res.get("Vorhersage %", res.get("Prediction %", 0)) for res in results]
 min_val, max_val = min(vorhersagen), max(vorhersagen)
@@ -168,6 +161,12 @@ tooltip = {"html": "<b>{Parkplatz}</b><br/>Prediction: {Vorhersage %}",
 view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
 
-# --- Einzelanzeige ---
-if selected_prediction is not None:
-    st.markdown(f"### Prediction for **{selected_parking_display}**: {selected_prediction:.2f} occupation")
+
+st.markdown("---")
+
+show_debug = st.toggle("Debugging Mode")
+if show_debug:
+    st.subheader("Final model input for last prediction")
+    st.json(inputs)
+    st.subheader("All prediction results")
+    st.dataframe(pd.DataFrame(results))

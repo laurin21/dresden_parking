@@ -7,6 +7,7 @@ import holidays
 import pandas as pd
 import pydeck as pdk
 import requests
+import time
 
 from mappings import *
 
@@ -89,8 +90,13 @@ def get_occupancy_value(parking_key, minute_of_day):
 results = []
 selected_prediction = None
 for model_file, key in zip(pkl_files, parking_names):
-    with open(model_file, "rb") as f:
-        model = pickle.load(f)
+    try:
+        with open(model_file, "rb") as f:
+            model = pickle.load(f)
+    except EOFError:
+        st.info("An error occurred and the application was restarted.")
+        time.sleep(3)
+        st.experimental_rerun()
     model_name_value = name_mapping.get(key, key)
     inputs = {
         "Name": model_name_value,

@@ -92,10 +92,11 @@ for model_file, key in zip(pkl_files, parking_names):
     try:
         with open(model_file, "rb") as f:
             model = pickle.load(f)
-    except EOFError:
+    except (EOFError, _pickle.UnpicklingError):
         placeholder = st.empty()
         placeholder.info("An error occurred and the application was restarted.")
         st.experimental_rerun()
+
 
     model_name_value = name_mapping.get(key, key)
     inputs = {

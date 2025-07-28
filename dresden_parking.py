@@ -130,8 +130,7 @@ col_selected, col_min, col_max = st.columns([1, 1, 1], border=False)
 with col_selected:
     if selected_prediction is not None:
         st.markdown(f"Predicted occupation for selected parking lot")
-        st.markdown(f"\"**{selected_parking_display}\"**")
-        st.metric(label="", value=f"{selected_prediction:.2f}%")
+        st.metric(label=f"{selected_parking_display}", value=f"{selected_prediction:.2f}%")
 
 with col_min:
     min_result = min(results, key=lambda x: x["Vorhersage %"])
@@ -141,8 +140,7 @@ with col_min:
 with col_max:
     max_result = max(results, key=lambda x: x["Vorhersage %"])
     st.markdown("Highest predicted occupation")
-    st.markdown(f"\"**{max_result['Parkplatz']}\"**")
-    st.metric(label="", value=f"{max_result['Vorhersage %']:.2f}%")
+    st.metric(label=f"{max_result['Parkplatz']}", value=f"{max_result['Vorhersage %']:.2f}%")
 
 # --- Karte ---
 st.markdown("---")

@@ -17,7 +17,8 @@ from mappings import (
     distance_mapping,
     weather_code_mapping,
     rain_values,
-    event_size_values
+    event_size_values,
+    occupancy_mapping
 )
 
 st.set_page_config(page_title="Parking Model Inputs", layout="wide")
@@ -95,7 +96,10 @@ else:
     rain = rain_api
     description = description_auto
     humidity = humidity_api
-    final_avg_occ = st.number_input("Average occupation (%)", min_value=0.0, max_value=100.0, value=50.0)
+    def get_occupancy_value(parking_name, minute_of_day):
+        if parking_name in occupancy_mapping:
+            return occupancy_mapping[parking_name].get(minute_of_day, 0.0)
+        return 0.0    
     in_event_window = st.selectbox("Event in 600 m radius?", [0, 1])
     if in_event_window == 1:
         event_size = st.selectbox("Event size", options=event_size_values)
@@ -117,7 +121,7 @@ else:
             "Rain": float(rain),
             "District": district_mapping.get(key, "Unbekannt"),
             "Type": type_mapping.get(model_name_value, "Unbekannt"),
-            "final_avg_occ": float(final_avg_occ),
+            "final_avg_occ": float(get_occupancy_value(key, minute_of_day)),
             "in_event_window": int(in_event_window),
             "event_size": event_size,
             "distance_to_nearest_parking": float(distance_mapping.get(model_name_value, 0.0)),

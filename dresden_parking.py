@@ -342,11 +342,37 @@ else:
         with open(model_file, "rb") as f:
             model = pickle.load(f)
         model_name_value = name_mapping.get(key, key)
-        inputs = { ... }  # unverändert
+        inputs = {
+            "Name": model_name_value,
+            "Capacity": float(capacity_mapping.get(key, 0)),
+            "Temperature": float(temperature),
+            "Description": description,
+            "Humidity": float(humidity),
+            "Rain": float(rain),
+            "District": district_mapping.get(key, "Unbekannt"),
+            "Type": type_mapping.get(model_name_value, "Unbekannt"),
+            "final_avg_occ": float(final_avg_occ),
+            "in_event_window": int(in_event_window),
+            "event_size": event_size,
+            "distance_to_nearest_parking": float(distance_mapping.get(model_name_value, 0.0)),
+            "hour": float(hour),
+            "minute_of_day": float(minute_of_day),
+            "weekday": float(weekday),
+            "is_weekend": float(is_weekend),
+            "is_holiday": float(is_holiday)
+        }
+
         feature_order = list(model.feature_names_in_) if hasattr(model, "feature_names_in_") else list(inputs.keys())
-        input_df = pd.DataFrame([[inputs[f] for f in feature_order]], columns=feature_order)
+
+        # Fehlende Features abfangen
+        missing_features = [f for f in feature_order if f not in inputs]
+        if missing_features:
+            st.warning(f"Missing features for model {model_name_value}: {missing_features}")
+        # DataFrame erstellen, fehlende Features auf None setzen
+        input_df = pd.DataFrame([[inputs.get(f, None) for f in feature_order]], columns=feature_order)
         for col in input_df.select_dtypes(include=['object']).columns:
             input_df[col] = input_df[col].astype('category')
+
         prediction = model.predict(input_df)[0]
         results.append({"Parkplatz": model_name_value, "Vorhersage %": round(prediction, 2)})
 

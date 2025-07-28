@@ -83,7 +83,6 @@ else:
     rain = rain_api
     description = description_auto
     humidity = st.slider("Humidity (%)", min_value=0, max_value=100, value=50)
-    rain = st.selectbox("Rain (mm)", options=rain_values, format_func=lambda x: f"{x} mm")
     final_avg_occ = st.number_input("Average occupation (%)", min_value=0.0, max_value=100.0, value=50.0)
     in_event_window = st.selectbox("Event in 300m radius??", [0, 1])
     event_size = st.selectbox("Event size", options=event_size_values)

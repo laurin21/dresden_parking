@@ -124,6 +124,11 @@ for model_file, key in zip(pkl_files, parking_names):
     if key == selected_parking:
         selected_prediction = round(prediction, 2)
 
+for res in results:
+    res["Vorhersage %"] = min(res["Vorhersage %"], 1.00)
+if selected_prediction is not None:
+    selected_prediction = min(selected_prediction, 1.00)
+
 # KPIs
 st.markdown("---")
 col_selected, col_min, col_max = st.columns([1, 1, 1], border=False)

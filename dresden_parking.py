@@ -47,7 +47,6 @@ sachsen_holidays = holidays.Germany(prov='SN')
 
 st.subheader("User input")
 col_time, col_event = st.columns([1, 1], border=True)
-
 with col_time:
     minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", 0, 48*60, 120, 5)
     local_tz = pytz.timezone("Europe/Berlin")
@@ -125,12 +124,20 @@ for model_file, key in zip(pkl_files, parking_names):
     if key == selected_parking:
         selected_prediction = round(prediction, 2)
 
-# --- Einzelanzeige ---
+# KPIs
 st.markdown("---")
-if selected_prediction is not None:
-    st.markdown(f"Predicted occupation for")
-    st.markdown(f"\"**{selected_parking_display}\"**")
-    st.metric(label="", value=f"{selected_prediction:.2f}%")
+col_selected, col_min, col_max = st.columns([1, 1, 1], border=False)
+with col_selected:
+    if selected_prediction is not None:
+        st.markdown(f"Predicted occupation for")
+        st.markdown(f"\"**{selected_parking_display}\"**")
+        st.metric(label="", value=f"{selected_prediction:.2f}%")
+
+with col_min:
+    pass
+
+with col_max:
+    pass
 
 # --- Karte ---
 st.markdown("---")

@@ -29,8 +29,9 @@ parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_fi
 
 # --- Wetterdaten von Open-Meteo API ---
 try:
-    weather_url = ("https://api.open-meteo.com/v1/forecast?latitude=51.0504&longitude=13.7373"
-                   "&current_weather=true&hourly=weathercode")
+    weather_url = ("https://api.open-meteo.com/v1/forecast"
+                   "?latitude=51.0504&longitude=13.7373"
+                   "&current_weather=true&hourly=weathercode,precipitation")
     response = requests.get(weather_url)
     if response.status_code == 200:
         weather_data = response.json()
@@ -39,16 +40,29 @@ try:
         windspeed = current_weather.get("windspeed")
         weather_code = current_weather.get("weathercode")
 
+        # Niederschlag ermitteln (aktueller Zeitpunkt)
+        precipitation_series = weather_data.get("hourly", {}).get("precipitation", [])
+        hourly_times = weather_data.get("hourly", {}).get("time", [])
+        rain_api = 0.0
+        if hourly_times and precipitation_series:
+            # Aktuelle Zeit finden
+            now_str = datetime.utcnow().replace(minute=0, second=0, microsecond=0).isoformat() + "Z"
+            if now_str in hourly_times:
+                idx = hourly_times.index(now_str)
+                rain_api = precipitation_series[idx]
         description_auto = weather_code_mapping.get(weather_code, "Unknown")
-        weather_text = f"Current weather in Dresden: {temperature_api}°C, wind {windspeed} km/h, {description_auto}"
+        weather_text = f"Current weather in Dresden: {temperature_api}°C, wind {windspeed} km/h, {description_auto}, rain {rain_api} mm"
     else:
         weather_text = "Weather data failed to load."
         description_auto = "Clear"
+        rain_api = 0.0
 except Exception as e:
     weather_text = f"Error during loading of weather data: {e}"
     description_auto = "Clear"
+    rain_api = 0.0
 
 st.write(weather_text)
+
 
 sachsen_holidays = holidays.Germany(prov='SN')
 

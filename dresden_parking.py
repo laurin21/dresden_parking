@@ -203,21 +203,11 @@ st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, 
 st.markdown("#### Legend")
 col1, col2, col3= st.columns([1, 1, 1])
 with col1:
-    st.markdown("<div style='width:20px;height:20px;background-color:rgb(0,255,0)'></div>, Low predicted occupation", unsafe_allow_html=True)
+    st.markdown("<div style='width:20px;height:20px;background-color:rgb(0,255,0)'></div> Low predicted occupation", unsafe_allow_html=True)
 with col2:
-    st.markdown("Low predicted occupation")
-
-col1, col2 = st.columns([1, 5])
-with col1:
-    st.markdown("<div style='width:20px;height:20px;background-color:rgb(255,255,0)'></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("Medium predicted occupation")
-
-col1, col2 = st.columns([1, 5])
-with col1:
-    st.markdown("<div style='width:20px;height:20px;background-color:rgb(255,0,0)'></div>", unsafe_allow_html=True)
-with col2:
-    st.markdown("High predicted occupation")
+    st.markdown("<div style='width:20px;height:20px;background-color:rgb(255,255,0)'></div> Medium predicted occupation", unsafe_allow_html=True)
+with col3:
+    st.markdown("<div style='width:20px;height:20px;background-color:rgb(255,0,0)'></div> High predicted occupation", unsafe_allow_html=True)
 
 st.markdown("---")
 

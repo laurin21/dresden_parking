@@ -78,7 +78,7 @@ is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_t
 
 # Anzeige der ausgewählten Uhrzeit
 st.markdown(f"**Selected time:**")
-st.markdown(f"{prediction_time.strftime('%d.%m.%Y %H:%M')}")
+st.markdown(f"{prediction_time.strftime('%d.%m.%Y, %H:%M')}")
 
 temperature = temperature_api
 rain = rain_api

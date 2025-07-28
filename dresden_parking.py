@@ -45,6 +45,8 @@ if hourly_times:
 description_auto = weather_code_mapping.get(weather_code, "Unknown")
 sachsen_holidays = holidays.Germany(prov='SN')
 
+st.title("🅿️ Parking lot predictions for Dresden")
+
 st.subheader("User input")
 col_time, col_event = st.columns([1, 1], border=True)
 with col_time:
@@ -155,6 +157,7 @@ if results:
 
 # --- Karte ---
 st.markdown("---")
+st.subheader("🗺️ Map for Dresden parking prediction")
 vorhersagen = [res.get("Vorhersage %", 0) for res in results]
 min_val, max_val = min(vorhersagen), max(vorhersagen)
 range_val = max_val - min_val if max_val != min_val else 1
@@ -186,7 +189,10 @@ scatter_layer = pdk.Layer(
 )
 tooltip = {"html": "<b>{Parkplatz}</b><br/>{TooltipText}",
            "style": {"backgroundColor": "steelblue", "color": "white"}}
-view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
+if st.button("Recenter Map"):
+    view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
+else:
+    view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
 
 

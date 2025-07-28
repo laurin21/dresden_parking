@@ -189,12 +189,12 @@ scatter_layer = pdk.Layer(
 )
 tooltip = {"html": "<b>{Parkplatz}</b><br/>{TooltipText}",
            "style": {"backgroundColor": "steelblue", "color": "white"}}
-if st.button("Recenter Map"):
-    view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
-else:
-    view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
+# Standard ViewState
+view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
+# Karte anzeigen
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
-
+if st.button("Recenter Map"):
+    st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
 
 st.markdown("---")
 

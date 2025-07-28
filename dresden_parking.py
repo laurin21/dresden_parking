@@ -102,7 +102,7 @@ with col_event:
     if in_event_window == 1:
         event_size = st.selectbox("Event size", options=event_size_values)
     else:
-    event_size = None  # Optional, wenn kein Event gewählt ist
+        event_size = None  # Optional, wenn kein Event gewählt ist
 
 st.markdown("---")
 

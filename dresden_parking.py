@@ -134,10 +134,16 @@ with col_selected:
         st.metric(label="", value=f"{selected_prediction:.2f}%")
 
 with col_min:
-    pass
+    min_result = min(results, key=lambda x: x["Vorhersage %"])
+    st.markdown("Lowest predicted occupation")
+    st.markdown(f"\"**{min_result['Parkplatz']}\"**")
+    st.metric(label="", value=f"{min_result['Vorhersage %']:.2f}%")
 
 with col_max:
-    pass
+    max_result = max(results, key=lambda x: x["Vorhersage %"])
+    st.markdown("Highest predicted occupation")
+    st.markdown(f"\"**{max_result['Parkplatz']}\"**")
+    st.metric(label="", value=f"{max_result['Vorhersage %']:.2f}%")
 
 # --- Karte ---
 st.markdown("---")

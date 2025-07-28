@@ -272,6 +272,22 @@ rain_values = ['0.0', '0.01', '0.02', '0.03', '0.04', '0.05', '0.06', '0.07', '0
 description_values = ['Clear', 'Cloudy', 'Fair', 'Fog', 'Light Rain', 'Light Rain with Thunder', 'Mostly Cloudy', 'Partly Cloudy', 'Rain', 'Rain Shower', 'Showers in the Vicinity', 'Sunny', 'Thunder in the Vicinity', 'Thunderstorm']
 event_size_values = ['', 'large', 'medium', 'small', 'unknown']
 
+try:
+    weather_url = "https://api.open-meteo.com/v1/forecast?latitude=51.0504&longitude=13.7373&current_weather=true"
+    response = requests.get(weather_url)
+    if response.status_code == 200:
+        weather_data = response.json().get("current_weather", {})
+        temperature_api = weather_data.get("temperature")
+        windspeed = weather_data.get("windspeed")
+        weather_text = f"Current weather in Dresden: {temperature}°C, wind {windspeed} km/h"
+    else:
+        weather_text = "Weather data failed to load."
+except Exception as e:
+    weather_text = f"Error during loading of weather data: {e}"
+
+# Wettertext oben anzeigen
+st.write(weather_text)
+
 # Feiertage Sachsen
 sachsen_holidays = holidays.Germany(prov='SN')
 
@@ -290,7 +306,7 @@ else:
 
     # --- Eingaben für alle Modelle ---
     st.subheader("Other input")
-    temperature = st.number_input("Temperature (°C)", value=20.0)
+    temperature = temperature_api
     description = st.selectbox("Weather description", description_values)
     humidity = st.slider("Humidity (%)", min_value=0, max_value=100, value=50)
     rain = st.selectbox("Rain (mm)", options=rain_values, format_func=lambda x: f"{x} mm")
@@ -332,24 +348,6 @@ else:
         prediction = model.predict(input_df)[0]
         results.append({"Parkplatz": model_name_value, "Vorhersage %": round(prediction, 2)})
     
-    
-
-
-    try:
-        weather_url = "https://api.open-meteo.com/v1/forecast?latitude=51.0504&longitude=13.7373&current_weather=true"
-        response = requests.get(weather_url)
-        if response.status_code == 200:
-            weather_data = response.json().get("current_weather", {})
-            temperature = weather_data.get("temperature")
-            windspeed = weather_data.get("windspeed")
-            weather_text = f"Current weather in Dresden: {temperature}°C, wind {windspeed} km/h"
-        else:
-            weather_text = "Weather data failed to load."
-    except Exception as e:
-        weather_text = f"Error during loading of weather data: {e}"
-
-    # Wettertext oben anzeigen
-    st.write(weather_text)
         
     st.header("Map for parking in Dresden")
 

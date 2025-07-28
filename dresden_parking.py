@@ -82,7 +82,7 @@ sachsen_holidays = holidays.Germany(prov='SN')
 if not pkl_files:
     st.warning("No .pkl-files found in the current directory.")
 else:
-    st.subheader("Time settings")
+    st.subheader("User input")
     minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", min_value=0, max_value=48*60, value=0, step=5)
     prediction_time = datetime.now() + timedelta(minutes=minutes_ahead)
     hour = prediction_time.hour
@@ -91,7 +91,9 @@ else:
     is_weekend = 1 if weekday >= 5 else 0
     is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
 
-    st.subheader("Other input")
+    # Anzeige der ausgewählten Uhrzeit
+    st.markdown(f"**Selected time:** {prediction_time.strftime('%H:%M')}")
+
     temperature = temperature_api
     rain = rain_api
     description = description_auto

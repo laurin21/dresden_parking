@@ -272,6 +272,15 @@ weather_code_mapping = {
             96: "Thunderstorm with Hail"
         }
 
+event_size_display_mapping = {
+    "": None, 
+    "large": "Large",
+    "medium": "Medium",
+    "small": "Small",
+    "unknown": "Unknown"
+}
+
+
 occupancy_mapping = {
     "Altmarkt": {
         "0": 0.3553820408163265,

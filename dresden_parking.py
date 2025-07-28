@@ -18,7 +18,8 @@ from mappings import (
     distance_mapping,
     weather_code_mapping,
     event_size_values,
-    occupancy_mapping
+    occupancy_mapping,
+    event_size_display_mapping
 )
 
 st.set_page_config(page_title="Dresden Parking", layout="wide")
@@ -75,12 +76,12 @@ with col_time:
     st.markdown(f"{prediction_time.strftime('%d.%m.%Y, %H:%M')}")
 
 with col_event:
-    # --- Event request ---
-    in_event_window = st.toggle("Event in 600 m radius?", [0, 1])
-    if in_event_window == 1:
-        event_size = st.pills("Event size", options=event_size_values)
+    in_event_window = st.toggle("Event in 600 m radius?", value=False)
+    if in_event_window:
+        raw_event_size = st.selectbox("Event size", options=event_size_values)
+        event_size = event_size_display_mapping.get(raw_event_size)
     else:
-        event_size = None  # Optional, wenn kein Event gewählt ist
+        event_size = None
 
 hour = prediction_time.hour
 minute_of_day = prediction_time.hour * 60 + prediction_time.minute

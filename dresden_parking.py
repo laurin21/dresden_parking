@@ -99,12 +99,13 @@ else:
 
     # --- avg occ Abfrage ---
     def get_occupancy_value(parking_key, minute_of_day):
-    # Name korrekt mappen
         mapped_name = name_mapping.get(parking_key, parking_key)
         if mapped_name not in occupancy_mapping:
             return 50.0  # Fallback
-        rounded_minute = 5 * round(minute_of_day / 5)
+
+        rounded_minute = str(5 * round(minute_of_day / 5))  # String!
         return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
+
 
     # --- Event request ---
     in_event_window = st.selectbox("Event in 600 m radius?", [0, 1])

@@ -62,11 +62,26 @@ description_auto = weather_code_mapping.get(weather_code, "Unknown")
 sachsen_holidays = holidays.Germany(prov='SN')
 
 st.subheader("User input")
-minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", min_value=0, max_value=48*60, value=120, step=5)
-local_tz = pytz.timezone("Europe/Berlin")
-prediction_time = datetime.now(timezone.utc).astimezone(local_tz) + timedelta(minutes=minutes_ahead)    
-minute_rounded = (prediction_time.minute // 5) * 5
-prediction_time = prediction_time.replace(minute=minute_rounded, second=0, microsecond=0)
+col_time, col_event = st.columns([1, 1])  # zwei gleich breite Spalten
+
+with col_time:
+    minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", min_value=0, max_value=48*60, value=120, step=5)
+    local_tz = pytz.timezone("Europe/Berlin")
+    prediction_time = datetime.now(timezone.utc).astimezone(local_tz) + timedelta(minutes=minutes_ahead)    
+    minute_rounded = (prediction_time.minute // 5) * 5
+    prediction_time = prediction_time.replace(minute=minute_rounded, second=0, microsecond=0)
+    # Anzeige der ausgewählten Uhrzeit
+    st.markdown(f"**Selected time:**")
+    st.markdown(f"{prediction_time.strftime('%d.%m.%Y, %H:%M')}")
+
+with col_event:
+    # --- Event request ---
+    in_event_window = st.toggle("Event in 600 m radius?", [0, 1])
+    if in_event_window == 1:
+        event_size = st.selectbox("Event size", options=event_size_values)
+    else:
+        event_size = None  # Optional, wenn kein Event gewählt ist
+
 hour = prediction_time.hour
 minute_of_day = prediction_time.hour * 60 + prediction_time.minute
 weekday = prediction_time.weekday()
@@ -88,21 +103,7 @@ def get_occupancy_value(parking_key, minute_of_day):
     return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
 
 
-col_time, col_event = st.columns([1, 1])  # zwei gleich breite Spalten
 
-with col_time:
-    # Anzeige der ausgewählten Uhrzeit
-    st.markdown(f"**Selected time:**")
-    st.markdown(f"{prediction_time.strftime('%d.%m.%Y, %H:%M')}")
-
-with col_event:
-    # --- Event request ---
-    st.markdown("---")
-    in_event_window = st.toggle("Event in 600 m radius?", [0, 1])
-    if in_event_window == 1:
-        event_size = st.selectbox("Event size", options=event_size_values)
-    else:
-        event_size = None  # Optional, wenn kein Event gewählt ist
 
 st.markdown("---")
 

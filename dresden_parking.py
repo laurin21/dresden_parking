@@ -21,7 +21,7 @@ from mappings import (
     occupancy_mapping
 )
 
-st.set_page_config(page_title="Parking Model Inputs", layout="wide")
+st.set_page_config(page_title="Dresden Parking", layout="wide")
 
 # --- Parkplatznamen und Mapping auf Eingabewerte ---
 pkl_files = glob.glob("xgb_model_*.pkl")
@@ -77,7 +77,7 @@ is_weekend = 1 if weekday >= 5 else 0
 is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
 
 # Anzeige der ausgewählten Uhrzeit
-st.markdown(f"**Selected time:** {prediction_time.strftime('%H:%M')}")
+st.markdown(f"**Selected time:** \n {prediction_time.strftime('%d.%m.%Y %H:%M')}")
 
 temperature = temperature_api
 rain = rain_api

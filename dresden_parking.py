@@ -70,7 +70,7 @@ with col_event:
             "Event size",
             options=[x for x in event_size_values if x],
             format_func=lambda x: event_size_display_mapping.get(x, x),
-            default = "Medium"
+            default = "medium"
         )
         event_size = raw_event_size
     else:

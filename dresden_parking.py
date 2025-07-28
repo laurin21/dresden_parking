@@ -86,8 +86,6 @@ def get_occupancy_value(parking_key, minute_of_day):
     rounded_minute = str(5 * round(minute_of_day / 5))
     return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
 
-st.markdown("---")
-
 results = []
 selected_prediction = None
 for model_file, key in zip(pkl_files, parking_names):
@@ -123,10 +121,13 @@ for model_file, key in zip(pkl_files, parking_names):
         selected_prediction = round(prediction, 2)
 
 # --- Einzelanzeige ---
+st.markdown("---")
 if selected_prediction is not None:
     st.markdown(f"### Prediction for **{selected_parking_display}**: {selected_prediction:.2f} occupation")
 
+
 # --- Karte ---
+st.markdown("---")
 vorhersagen = [res.get("Vorhersage %", res.get("Prediction %", 0)) for res in results]
 min_val, max_val = min(vorhersagen), max(vorhersagen)
 range_val = max_val - min_val if max_val != min_val else 1

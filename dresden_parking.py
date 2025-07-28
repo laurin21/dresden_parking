@@ -93,11 +93,15 @@ def get_occupancy_value(parking_key, minute_of_day):
 
 
 # --- Event request ---
+st.markdown("---")
 in_event_window = st.toggle("Event in 600 m radius?", [0, 1])
 if in_event_window == 1:
     event_size = st.selectbox("Event size", options=event_size_values)
 else:
     event_size = None  # Optional, wenn kein Event gewählt ist
+
+st.markdown("---")
+
 
 results = []
 for model_file, key in zip(pkl_files, parking_names):

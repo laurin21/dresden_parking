@@ -276,11 +276,11 @@ event_size_values = ['', 'large', 'medium', 'small', 'unknown']
 sachsen_holidays = holidays.Germany(prov='SN')
 
 if not pkl_files:
-    st.warning("Keine .pkl-Dateien im aktuellen Verzeichnis gefunden.")
+    st.warning("No .pkl-files found in the current directory.")
 else:
     # --- Zeitfeatures ---
-    st.subheader("Zeiteinstellungen")
-    minutes_ahead = st.slider("Vorhersagezeitraum (in Minuten, bis 48h)", min_value=0, max_value=48*60, value=0, step=5)
+    st.subheader("Time settings")
+    minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", min_value=0, max_value=48*60, value=0, step=5)
     prediction_time = datetime.now() + timedelta(minutes=minutes_ahead)
     hour = prediction_time.hour
     minute_of_day = prediction_time.hour * 60 + prediction_time.minute
@@ -289,14 +289,14 @@ else:
     is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
 
     # --- Eingaben für alle Modelle ---
-    st.subheader("Allgemeine Eingaben")
-    temperature = st.number_input("Temperatur (°C)", value=20.0)
-    description = st.selectbox("Wetterbeschreibung", description_values)
-    humidity = st.slider("Luftfeuchtigkeit (%)", min_value=0, max_value=100, value=50)
-    rain = st.selectbox("Regen (mm)", options=rain_values, format_func=lambda x: f"{x} mm")
-    final_avg_occ = st.number_input("Durchschnittliche Belegung (%)", min_value=0.0, max_value=100.0, value=50.0)
-    in_event_window = st.selectbox("In Event-Fenster?", [0, 1])
-    event_size = st.selectbox("Eventgröße", options=event_size_values)
+    st.subheader("Other input")
+    temperature = st.number_input("Temperature (°C)", value=20.0)
+    description = st.selectbox("Weather description", description_values)
+    humidity = st.slider("Humidity (%)", min_value=0, max_value=100, value=50)
+    rain = st.selectbox("Rain (mm)", options=rain_values, format_func=lambda x: f"{x} mm")
+    final_avg_occ = st.number_input("Average occupation (%)", min_value=0.0, max_value=100.0, value=50.0)
+    in_event_window = st.selectbox("Event in 300m radius??", [0, 1])
+    event_size = st.selectbox("Event size", options=event_size_values)
 
     results = []
     for model_file, key in zip(pkl_files, parking_names):
@@ -342,11 +342,11 @@ else:
             weather_data = response.json().get("current_weather", {})
             temperature = weather_data.get("temperature")
             windspeed = weather_data.get("windspeed")
-            weather_text = f"Aktuelles Wetter in Dresden: {temperature}°C, Wind {windspeed} km/h"
+            weather_text = f"Current weather in Dresden: {temperature}°C, wind {windspeed} km/h"
         else:
-            weather_text = "Wetterdaten konnten nicht geladen werden."
+            weather_text = "Weather data failed to load."
     except Exception as e:
-        weather_text = f"Fehler beim Laden des Wetters: {e}"
+        weather_text = f"Error during loading of weather data: {e}"
 
     # Wettertext oben anzeigen
     st.write(weather_text)
@@ -354,25 +354,25 @@ else:
     st.header("Map for parking in Dresden")
 
     # Normierte Werte (0 = minimal, 1 = maximal) berechnen
-    vorhersagen = [res["Vorhersage %"] for res in results]
+    vorhersagen = [res["Prediction %"] for res in results]
     min_val, max_val = min(vorhersagen), max(vorhersagen)
     range_val = max_val - min_val if max_val != min_val else 1
 
     map_data = []
     for res in results:
-        parkplatz = res["Parkplatz"]
-        vorhersage = round(res["Vorhersage %"], 2)  # auf zwei Nachkommastellen runden
+        parkplatz = res["Parking lot"]
+        vorhersage = round(res["Prediction %"], 2)  # auf zwei Nachkommastellen runden
         coords = coordinates_mapping.get(parkplatz)
         if coords:
-            norm_value = (res["Vorhersage %"] - min_val) / range_val  # Skala 0-1
+            norm_value = (res["Prediction %"] - min_val) / range_val  # Skala 0-1
             r = int(norm_value * 255)
             g = int((1 - norm_value) * 255)
             b = 0
             map_data.append({
                 "lat": coords[1],
                 "lon": coords[0],
-                "Parkplatz": parkplatz,
-                "Vorhersage %": vorhersage,
+                "Parking lot": parkplatz,
+                "Prediction %": vorhersage,
                 "color": [r, g, b]
             })
 
@@ -388,7 +388,7 @@ else:
     )
 
     tooltip = {
-        "html": "<b>{Parkplatz}</b><br/>Vorhersage: {Vorhersage %}%",
+        "html": "<b>{Parkplatz}</b><br/>Prediction: {Prediction %}%",
         "style": {"backgroundColor": "steelblue", "color": "white"}
     }
 

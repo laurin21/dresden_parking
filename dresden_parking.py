@@ -279,7 +279,7 @@ try:
         weather_data = response.json().get("current_weather", {})
         temperature_api = weather_data.get("temperature")
         windspeed = weather_data.get("windspeed")
-        weather_text = f"Current weather in Dresden: {temperature}°C, wind {windspeed} km/h"
+        weather_text = f"Current weather in Dresden: {temperature_api}°C, wind {windspeed} km/h"
     else:
         weather_text = "Weather data failed to load."
 except Exception as e:

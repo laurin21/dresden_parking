@@ -80,7 +80,8 @@ else:
 
     st.subheader("Other input")
     temperature = temperature_api
-    description = st.selectbox("Weather description", [description_auto])
+    rain = rain_api
+    description = description_auto
     humidity = st.slider("Humidity (%)", min_value=0, max_value=100, value=50)
     rain = st.selectbox("Rain (mm)", options=rain_values, format_func=lambda x: f"{x} mm")
     final_avg_occ = st.number_input("Average occupation (%)", min_value=0.0, max_value=100.0, value=50.0)

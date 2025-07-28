@@ -34,6 +34,7 @@ weather_url = (
 "?latitude=51.0504&longitude=13.7373"
 "&current_weather=true&hourly=weathercode,precipitation,relativehumidity_2m")
 
+response = requests.get(weather_url)
 weather_data = response.json()
 current_weather = weather_data.get("current_weather", {})
 temperature_api = current_weather.get("temperature")

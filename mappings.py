@@ -250,7 +250,6 @@ distance_mapping = {
   "Wöhrl / Florentinum": 192.076243
 }
 
-rain_values = ['0.0', '0.01', '0.02', '0.03', '0.04', '0.05', '0.06', '0.07', '0.08', '0.09']
 event_size_values = ['', 'large', 'medium', 'small', 'unknown']
 
 weather_code_mapping = {

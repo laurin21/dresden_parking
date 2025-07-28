@@ -9,18 +9,7 @@ import folium
 import pydeck as pdk
 import requests
 
-from mappings import (
-    coordinates_mapping,
-    name_mapping,
-    district_mapping,
-    capacity_mapping,
-    type_mapping,
-    distance_mapping,
-    weather_code_mapping,
-    event_size_values,
-    occupancy_mapping,
-    event_size_display_mapping
-)
+from mappings import *
 
 st.set_page_config(page_title="Dresden Parking", layout="wide")
 

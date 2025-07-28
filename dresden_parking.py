@@ -5,11 +5,21 @@ from datetime import datetime, timedelta, date, timezone
 import pytz
 import holidays
 import pandas as pd
-import folium
 import pydeck as pdk
 import requests
 
-from mappings import *
+from mappings import (
+    coordinates_mapping,
+    name_mapping,
+    district_mapping,
+    capacity_mapping,
+    type_mapping,
+    distance_mapping,
+    weather_code_mapping,
+    event_size_values,
+    occupancy_mapping,
+    event_size_display_mapping
+)
 
 st.set_page_config(page_title="Dresden Parking", layout="wide")
 
@@ -18,20 +28,16 @@ pkl_files = glob.glob("xgb_model_*.pkl")
 parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_files]
 parking_display_names = [name_mapping.get(p, p) for p in parking_names]
 
-# --- Wetterdaten von Open-Meteo API ---
-weather_url = (
-"https://api.open-meteo.com/v1/forecast"
-"?latitude=51.0504&longitude=13.7373"
-"&current_weather=true&hourly=weathercode,precipitation,relativehumidity_2m")
-
+# --- Wetterdaten ---
+weather_url = ("https://api.open-meteo.com/v1/forecast"
+               "?latitude=51.0504&longitude=13.7373"
+               "&current_weather=true&hourly=weathercode,precipitation,relativehumidity_2m")
 response = requests.get(weather_url)
 weather_data = response.json()
 current_weather = weather_data.get("current_weather", {})
 temperature_api = current_weather.get("temperature")
-windspeed = current_weather.get("windspeed")
 weather_code = current_weather.get("weathercode")
 
-## Humidity extrahieren (aktueller Zeitpunkt)
 humidity_series = weather_data.get("hourly", {}).get("relativehumidity_2m", [])
 rain_series = weather_data.get("hourly", {}).get("precipitation", [])
 hourly_times = weather_data.get("hourly", {}).get("time", [])
@@ -48,59 +54,52 @@ if hourly_times:
             humidity_api = humidity_series[idx]
 
 description_auto = weather_code_mapping.get(weather_code, "Unknown")
-
 sachsen_holidays = holidays.Germany(prov='SN')
 
 st.subheader("User input")
-col_time, col_event = st.columns([1, 1], border = True)
+col_time, col_event, col_parking = st.columns([1, 1, 1], border=True)
 
 with col_time:
-    minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", min_value=0, max_value=48*60, value=120, step=5)
+    minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", 0, 48*60, 120, 5)
     local_tz = pytz.timezone("Europe/Berlin")
-    prediction_time = datetime.now(timezone.utc).astimezone(local_tz) + timedelta(minutes=minutes_ahead)    
+    prediction_time = datetime.now(timezone.utc).astimezone(local_tz) + timedelta(minutes=minutes_ahead)
     minute_rounded = (prediction_time.minute // 5) * 5
     prediction_time = prediction_time.replace(minute=minute_rounded, second=0, microsecond=0)
-    st.markdown(f"**Selected time:**")
-    st.markdown(f"{prediction_time.strftime('%d.%m.%Y, %H:%M')}")
+    st.markdown(f"**Selected time:** {prediction_time.strftime('%d.%m.%Y, %H:%M')}")
 
 with col_event:
     in_event_window = st.toggle("Event in 600 m radius?", value=False)
     if in_event_window:
-        raw_event_size = st.pills(
+        raw_event_size = st.selectbox(
             "Event size",
-            options=[x for x in event_size_values if x],  # "" rausfiltern
+            options=[x for x in event_size_values if x],
             format_func=lambda x: event_size_display_mapping.get(x, x)
         )
-        event_size = raw_event_size  # Modell bekommt Originalwert
+        event_size = raw_event_size
     else:
         event_size = None
 
+with col_parking:
+    selected_parking_display = st.selectbox("Select parking lot", parking_display_names)
+    selected_parking = parking_names[parking_display_names.index(selected_parking_display)]
 
+# --- Zeitbasierte Variablen ---
 hour = prediction_time.hour
 minute_of_day = prediction_time.hour * 60 + prediction_time.minute
 weekday = prediction_time.weekday()
 is_weekend = 1 if weekday >= 5 else 0
 is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
-temperature = temperature_api
-rain = rain_api
-description = description_auto
-humidity = humidity_api
 
-# --- avg occ Abfrage ---
 def get_occupancy_value(parking_key, minute_of_day):
     mapped_name = name_mapping.get(parking_key, parking_key)
     if mapped_name not in occupancy_mapping:
-        return 50.0  # Fallback
-
-    rounded_minute = str(5 * round(minute_of_day / 5))  # String!
+        return 50.0
+    rounded_minute = str(5 * round(minute_of_day / 5))
     return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
-
-
-selected_parking_display = st.selectbox("Select parking lot", parking_display_names)
-selected_parking = parking_names[parking_display_names.index(selected_parking_display)]
 
 st.markdown("---")
 
+results = []
 selected_prediction = None
 for model_file, key in zip(pkl_files, parking_names):
     with open(model_file, "rb") as f:
@@ -134,37 +133,28 @@ for model_file, key in zip(pkl_files, parking_names):
     if key == selected_parking:
         selected_prediction = round(prediction, 2)
 
-# --- Einzelanzeige ---
-if selected_prediction is not None:
-    st.markdown(f"### Prediction for **{selected_parking_display}**: {selected_prediction:.2f} occupation")
-
-
 # --- Karte ---
 vorhersagen = [res.get("Vorhersage %", res.get("Prediction %", 0)) for res in results]
 min_val, max_val = min(vorhersagen), max(vorhersagen)
 range_val = max_val - min_val if max_val != min_val else 1
-
 map_data = []
 for res in results:
-    parkplatz = res.get("Parkplatz", res.get("Parking lot", "Unbekannt"))
-    vorhersage = res.get("Vorhersage %", res.get("Prediction %", 0))
-    vorhersage_rounded = round(vorhersage, 2)
+    parkplatz = res.get("Parkplatz", "Unbekannt")
+    vorhersage = res.get("Vorhersage %", 0)
     coords = coordinates_mapping.get(parkplatz)
     if coords:
-        norm_value = (vorhersage_rounded - min_val) / range_val
+        norm_value = (vorhersage - min_val) / range_val
         r = int(norm_value * 255)
         g = int((1 - norm_value) * 255)
         map_data.append({
             "lat": coords[1],
             "lon": coords[0],
             "Parkplatz": parkplatz,
-            # als String mit 2 Nachkommastellen für Tooltip
-            "Vorhersage %": f"{vorhersage_rounded:.2f} occupation",  
+            "Vorhersage %": f"{vorhersage:.2f} occupation",
             "color": [r, g, 0]
         })
 
 map_df = pd.DataFrame(map_data)
-
 scatter_layer = pdk.Layer(
     "ScatterplotLayer",
     data=map_df,
@@ -173,21 +163,11 @@ scatter_layer = pdk.Layer(
     get_radius=50,
     pickable=True
 )
-
-tooltip = {
-    "html": "<b>{Parkplatz}</b><br/>Prediction: {Vorhersage %}%",
-    "style": {"backgroundColor": "steelblue", "color": "white"}
-}
-
+tooltip = {"html": "<b>{Parkplatz}</b><br/>Prediction: {Vorhersage %}",
+           "style": {"backgroundColor": "steelblue", "color": "white"}}
 view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
 
-
-st.markdown("---")
-
-show_debug = st.toggle("Debugging Mode")
-if show_debug:
-    st.subheader("Final model input for last prediction")
-    st.json(inputs)
-    st.subheader("All prediction results")
-    st.dataframe(pd.DataFrame(results))
+# --- Einzelanzeige ---
+if selected_prediction is not None:
+    st.markdown(f"### Prediction for **{selected_parking_display}**: {selected_prediction:.2f} occupation")

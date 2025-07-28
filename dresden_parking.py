@@ -157,7 +157,7 @@ for res in results:
         map_data.append({"lat": coords[1], "lon": coords[0], "Parkplatz": parkplatz, "Vorhersage %": vorhersage, "color": [r, g, 0]})
 map_df = pd.DataFrame(map_data)
 scatter_layer = pdk.Layer("ScatterplotLayer", data=map_df, get_position="[lon, lat]", get_fill_color="color", get_radius=50, pickable=True)
-tooltip = {"html": "<b>{Parkplatz}</b><br/>Vorhersage: {Vorhersage %}%", "style": {"backgroundColor": "steelblue", "color": "white"}}
+tooltip = {"html": "<b>{Parkplatz}</b><br/>Prediction: {round(Vorhersage %, 2)}%", "style": {"backgroundColor": "steelblue", "color": "white"}}
 view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
 

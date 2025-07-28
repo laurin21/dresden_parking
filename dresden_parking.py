@@ -171,7 +171,7 @@ for res in results:
             "lat": coords[1],
             "lon": coords[0],
             "Parkplatz": parkplatz,
-            "Vorhersage %": f"{vorhersage:.2f} occupation",
+            "Vorhersage %": f"{int(vorhersage*100)}%",
             "color": [r, g, 0]
         })
 

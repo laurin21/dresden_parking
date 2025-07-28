@@ -7,7 +7,6 @@ import holidays
 import pandas as pd
 import pydeck as pdk
 import requests
-import time
 
 from mappings import *
 
@@ -94,9 +93,10 @@ for model_file, key in zip(pkl_files, parking_names):
         with open(model_file, "rb") as f:
             model = pickle.load(f)
     except EOFError:
-        st.info("An error occurred and the application was restarted.")
-        time.sleep(3)
+        placeholder = st.empty()
+        placeholder.info("An error occurred and the application was restarted.")
         st.experimental_rerun()
+
     model_name_value = name_mapping.get(key, key)
     inputs = {
         "Name": model_name_value,
@@ -130,7 +130,7 @@ for model_file, key in zip(pkl_files, parking_names):
 st.markdown("---")
 if selected_prediction is not None:
     st.markdown(f"Predicted occupation for")
-    st.markdown("\"**{selected_parking_display}\"**")
+    st.markdown(f"\"**{selected_parking_display}\"**")
     st.metric(label="", value=f"{selected_prediction:.2f}%")
 
 # --- Karte ---

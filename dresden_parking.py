@@ -96,16 +96,23 @@ else:
     rain = rain_api
     description = description_auto
     humidity = humidity_api
-    def get_occupancy_value(parking_name, minute_of_day):
-        if parking_name in occupancy_mapping:
-            return occupancy_mapping[parking_name].get(minute_of_day, 0.0)
-        return 0.0    
+
+
+    # --- avg occ Abfrage ---
+    def get_occupancy_value(parking_key, minute_of_day):
+    # Name korrekt mappen
+        mapped_name = name_mapping.get(parking_key, parking_key)
+        if mapped_name not in occupancy_mapping:
+            return 50.0  # Fallback
+        rounded_minute = 5 * round(minute_of_day / 5)
+        return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
+
+    # --- Event request ---
     in_event_window = st.selectbox("Event in 600 m radius?", [0, 1])
     if in_event_window == 1:
         event_size = st.selectbox("Event size", options=event_size_values)
     else:
-        event_size = ""  # Optional, wenn kein Event gewählt ist
-
+        event_size = None  # Optional, wenn kein Event gewählt ist
 
     results = []
     for model_file, key in zip(pkl_files, parking_names):

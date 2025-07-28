@@ -123,8 +123,10 @@ for model_file, key in zip(pkl_files, parking_names):
 # --- Einzelanzeige ---
 st.markdown("---")
 if selected_prediction is not None:
-    st.metric(label = "Predicted occupation for **{selected_parking_display}**", value = selected_prediction)
-
+    st.metric(
+        label=f"Prediction for {selected_parking_display}",
+        value=f"{selected_prediction:.2f} occupation"
+    )
 
 # --- Karte ---
 st.markdown("---")

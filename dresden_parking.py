@@ -73,10 +73,6 @@ weekday = prediction_time.weekday()
 is_weekend = 1 if weekday >= 5 else 0
 is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
 
-# Anzeige der ausgewählten Uhrzeit
-st.markdown(f"**Selected time:**")
-st.markdown(f"{prediction_time.strftime('%d.%m.%Y, %H:%M')}")
-
 temperature = temperature_api
 rain = rain_api
 description = description_auto
@@ -92,12 +88,20 @@ def get_occupancy_value(parking_key, minute_of_day):
     return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
 
 
-# --- Event request ---
-st.markdown("---")
-in_event_window = st.toggle("Event in 600 m radius?", [0, 1])
-if in_event_window == 1:
-    event_size = st.selectbox("Event size", options=event_size_values)
-else:
+col_time, col_event = st.columns([1, 1])  # zwei gleich breite Spalten
+
+with col_time:
+    # Anzeige der ausgewählten Uhrzeit
+    st.markdown(f"**Selected time:**")
+    st.markdown(f"{prediction_time.strftime('%d.%m.%Y, %H:%M')}")
+
+with col_event:
+    # --- Event request ---
+    st.markdown("---")
+    in_event_window = st.toggle("Event in 600 m radius?", [0, 1])
+    if in_event_window == 1:
+        event_size = st.selectbox("Event size", options=event_size_values)
+    else:
     event_size = None  # Optional, wenn kein Event gewählt ist
 
 st.markdown("---")

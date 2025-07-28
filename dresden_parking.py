@@ -58,18 +58,15 @@ if hourly_times:
             humidity_api = humidity_series[idx]
 
 description_auto = weather_code_mapping.get(weather_code, "Unknown")
-weather_text = (
-    f"Current weather in Dresden: {temperature_api}°C, "
-    f"wind {windspeed} km/h, {description_auto}, "
-    f"rain {rain_api} mm, humidity {humidity_api}%"
-    )
 
 sachsen_holidays = holidays.Germany(prov='SN')
 
 st.subheader("User input")
-minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", min_value=0, max_value=48*60, value=0, step=5)
+minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", min_value=0, max_value=48*60, value=120, step=5)
 local_tz = pytz.timezone("Europe/Berlin")
 prediction_time = datetime.now(timezone.utc).astimezone(local_tz) + timedelta(minutes=minutes_ahead)    
+minute_rounded = (prediction_time.minute // 5) * 5
+prediction_time = prediction_time.replace(minute=minute_rounded, second=0, microsecond=0)
 hour = prediction_time.hour
 minute_of_day = prediction_time.hour * 60 + prediction_time.minute
 weekday = prediction_time.weekday()

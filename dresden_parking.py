@@ -46,7 +46,7 @@ description_auto = weather_code_mapping.get(weather_code, "Unknown")
 sachsen_holidays = holidays.Germany(prov='SN')
 
 st.title("🅿️ Parking lot predictions for Dresden")
-
+st.markdown("---")
 st.subheader("User input")
 col_time, col_event = st.columns([1, 1], border=True)
 with col_time:

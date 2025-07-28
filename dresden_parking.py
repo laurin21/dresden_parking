@@ -96,8 +96,12 @@ else:
     description = description_auto
     humidity = humidity_api
     final_avg_occ = st.number_input("Average occupation (%)", min_value=0.0, max_value=100.0, value=50.0)
-    in_event_window = st.selectbox("Event in 300m radius??", [0, 1])
-    event_size = st.selectbox("Event size", options=event_size_values)
+    in_event_window = st.selectbox("Event in 600 m radius?", [0, 1])
+    if in_event_window == 1:
+        event_size = st.selectbox("Event size", options=event_size_values)
+    else:
+        event_size = ""  # Optional, wenn kein Event gewählt ist
+
 
     results = []
     for model_file, key in zip(pkl_files, parking_names):

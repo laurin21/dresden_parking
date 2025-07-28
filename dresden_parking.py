@@ -49,13 +49,16 @@ st.title("🅿️ Parking lot predictions for Dresden")
 st.markdown("---")
 st.subheader("User input")
 col_time, col_event = st.columns([1, 1], border=True)
+
 with col_time:
     minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", 0, 48*60, 120, 5)
     local_tz = pytz.timezone("Europe/Berlin")
     prediction_time = datetime.now(timezone.utc).astimezone(local_tz) + timedelta(minutes=minutes_ahead)
     minute_rounded = (prediction_time.minute // 5) * 5
     prediction_time = prediction_time.replace(minute=minute_rounded, second=0, microsecond=0)
-    st.markdown(f"**Selected time:** {prediction_time.strftime('%d.%m.%Y, %H:%M')}")
+    hours_ahead = minutes_ahead // 60
+    minutes_only = minutes_ahead % 60
+    st.markdown(f"**Selected time:** {prediction_time.strftime('%d.%m.%Y, %H:%M')} (+{hours_ahead:02d}:{minutes_only:02d})")
 
 with col_event:
     selected_parking_display = st.selectbox("Select parking lot", parking_display_names)

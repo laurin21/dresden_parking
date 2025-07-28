@@ -46,7 +46,7 @@ description_auto = weather_code_mapping.get(weather_code, "Unknown")
 sachsen_holidays = holidays.Germany(prov='SN')
 
 st.subheader("User input")
-col_time, col_event, col_parking = st.columns([1, 1, 1], border=True)
+col_time, col_event = st.columns([1, 1], border=True)
 
 with col_time:
     minutes_ahead = st.slider("Look into the future (in minutes, 48h max)", 0, 48*60, 120, 5)
@@ -57,6 +57,9 @@ with col_time:
     st.markdown(f"**Selected time:** {prediction_time.strftime('%d.%m.%Y, %H:%M')}")
 
 with col_event:
+    selected_parking_display = st.selectbox("Select parking lot", parking_display_names)
+    selected_parking = parking_names[parking_display_names.index(selected_parking_display)]
+
     in_event_window = st.toggle("Event in 600 m radius?", value=False)
     if in_event_window:
         raw_event_size = st.selectbox(
@@ -67,10 +70,6 @@ with col_event:
         event_size = raw_event_size
     else:
         event_size = None
-
-with col_parking:
-    selected_parking_display = st.selectbox("Select parking lot", parking_display_names)
-    selected_parking = parking_names[parking_display_names.index(selected_parking_display)]
 
 # --- Zeitbasierte Variablen ---
 hour = prediction_time.hour

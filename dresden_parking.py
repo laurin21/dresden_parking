@@ -71,7 +71,6 @@ with col_time:
     prediction_time = datetime.now(timezone.utc).astimezone(local_tz) + timedelta(minutes=minutes_ahead)    
     minute_rounded = (prediction_time.minute // 5) * 5
     prediction_time = prediction_time.replace(minute=minute_rounded, second=0, microsecond=0)
-    # Anzeige der ausgewählten Uhrzeit
     st.markdown(f"**Selected time:**")
     st.markdown(f"{prediction_time.strftime('%d.%m.%Y, %H:%M')}")
 
@@ -88,7 +87,6 @@ minute_of_day = prediction_time.hour * 60 + prediction_time.minute
 weekday = prediction_time.weekday()
 is_weekend = 1 if weekday >= 5 else 0
 is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
-
 temperature = temperature_api
 rain = rain_api
 description = description_auto
@@ -102,8 +100,6 @@ def get_occupancy_value(parking_key, minute_of_day):
 
     rounded_minute = str(5 * round(minute_of_day / 5))  # String!
     return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
-
-
 
 
 st.markdown("---")

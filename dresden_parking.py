@@ -136,8 +136,7 @@ with col_selected:
 with col_min:
     min_result = min(results, key=lambda x: x["Vorhersage %"])
     st.markdown("Lowest predicted occupation")
-    st.markdown(f"\"**{min_result['Parkplatz']}\"**")
-    st.metric(label="", value=f"{min_result['Vorhersage %']:.2f}%")
+    st.metric(label=f"{min_result['Parkplatz']}", value=f"{min_result['Vorhersage %']:.2f}%")
 
 with col_max:
     max_result = max(results, key=lambda x: x["Vorhersage %"])

@@ -78,7 +78,7 @@ with col_event:
     # --- Event request ---
     in_event_window = st.toggle("Event in 600 m radius?", [0, 1])
     if in_event_window == 1:
-        event_size = st.selectbox("Event size", options=event_size_values)
+        event_size = st.pills("Event size", options=event_size_values)
     else:
         event_size = None  # Optional, wenn kein Event gewählt ist
 

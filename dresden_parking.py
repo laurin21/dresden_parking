@@ -155,7 +155,7 @@ if results:
 
 # --- Karte ---
 st.markdown("---")
-vorhersagen = [res.get("Vorhersage %", res.get("Prediction %", 0)) for res in results]
+vorhersagen = [res.get("Vorhersage %", 0) for res in results]
 min_val, max_val = min(vorhersagen), max(vorhersagen)
 range_val = max_val - min_val if max_val != min_val else 1
 map_data = []
@@ -171,7 +171,7 @@ for res in results:
             "lat": coords[1],
             "lon": coords[0],
             "Parkplatz": parkplatz,
-            "Vorhersage %": f"{int(vorhersage*100)}%",
+            "TooltipText": f"Prediction for {prediction_time.strftime('%H:%M')}: {int(vorhersage*100)}%",
             "color": [r, g, 0]
         })
 
@@ -184,7 +184,7 @@ scatter_layer = pdk.Layer(
     get_radius=50,
     pickable=True
 )
-tooltip = {"html": "<b>{Parkplatz}</b><br/>Prediction: {Vorhersage %}",
+tooltip = {"html": "<b>{Parkplatz}</b><br/>{TooltipText}",
            "style": {"backgroundColor": "steelblue", "color": "white"}}
 view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))

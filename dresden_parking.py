@@ -129,23 +129,30 @@ for res in results:
 if selected_prediction is not None:
     selected_prediction = min(selected_prediction, 1.00)
 
-# KPIs
+# --- KPIs ---
 st.markdown("---")
 col_selected, col_min, col_max = st.columns([1, 1, 1], border=False)
+
+# Selected parking KPI
 with col_selected:
     if selected_prediction is not None:
-        st.markdown(f"Predicted occupation for selection")
-        st.metric(label=f"{selected_parking_display}", value=f"{selected_prediction:.2f}%")
+        st.markdown("Predicted occupation for")
+        st.markdown(f"\"**{selected_parking_display}**\"")
+        st.metric(label="", value=f"{int(selected_prediction*100)}%")
 
-with col_min:
+# Determine min and max predictions
+if results:
     min_result = min(results, key=lambda x: x["Vorhersage %"])
-    st.markdown("Lowest predicted occupation")
-    st.metric(label=f"{min_result['Parkplatz']}", value=f"{min_result['Vorhersage %']:.2f}%")
-
-with col_max:
     max_result = max(results, key=lambda x: x["Vorhersage %"])
-    st.markdown("Highest predicted occupation")
-    st.metric(label=f"{max_result['Parkplatz']}", value=f"{max_result['Vorhersage %']:.2f}%")
+
+    with col_min:
+        st.markdown("Lowest predicted occupation")
+        st.metric(label=f"{min_result['Parkplatz']}", value=f"{int(min_result['Vorhersage %']*100)}%")
+
+    with col_max:
+        st.markdown("Highest predicted occupation")
+        st.metric(label=f"{max_result['Parkplatz']}", value=f"{int(max_result['Vorhersage %']*100)}%")
+
 
 # --- Karte ---
 st.markdown("---")

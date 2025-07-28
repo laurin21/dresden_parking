@@ -58,7 +58,7 @@ with col_time:
     prediction_time = prediction_time.replace(minute=minute_rounded, second=0, microsecond=0)
     hours_ahead = minutes_ahead // 60
     minutes_only = minutes_ahead % 60
-    st.markdown(f"**Selected time:** {prediction_time.strftime('%d.%m.%Y, %H:%M')} (+{hours_ahead:02d}:{minutes_only:02d})")
+    st.markdown(f"**Selected time:** {prediction_time.strftime('%d.%m.%Y, %H:%M')} (+ {hours_ahead:02d}:{minutes_only:02d})")
 
 with col_event:
     selected_parking_display = st.selectbox("Select parking lot", parking_display_names)
@@ -66,7 +66,7 @@ with col_event:
 
     in_event_window = st.toggle("Event in 600 m radius?", value=False)
     if in_event_window:
-        raw_event_size = st.selectbox(
+        raw_event_size = st.pills(
             "Event size",
             options=[x for x in event_size_values if x],
             format_func=lambda x: event_size_display_mapping.get(x, x)

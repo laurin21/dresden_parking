@@ -201,8 +201,9 @@ st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, 
 
 # --- Legende für die Karte ---
 
-st.markdown("<div style='width:20px;height:20px;background-color:rgb(0,255,0)'></div> Low predicted occupation <div style='width:20px;height:20px;background-color:rgb(255,255,0)'></div> Medium predicted occupation <div style='width:20px;height:20px;background-color:rgb(255,0,0)'></div> High predicted occupation", unsafe_allow_html=True)
-
+# --- Legende für die Karte ---
+st.markdown("### Legend")
+st.markdown("<div style='display:flex;align-items:center;'><div style='width:20px;height:20px;background-color:rgb(0,255,0);margin-right:5px'></div><span style='margin-right:20px'>Low predicted occupation</span><div style='width:20px;height:20px;background-color:rgb(255,255,0);margin-right:5px'></div><span style='margin-right:20px'>Medium predicted occupation</span><div style='width:20px;height:20px;background-color:rgb(255,0,0);margin-right:5px'></div><span>High predicted occupation</span></div>", unsafe_allow_html=True)
 
 col1, col2, col3= st.columns([1, 1, 1])
 with col1:

@@ -17,34 +17,7 @@ pkl_files = glob.glob("xgb_model_*.pkl")
 parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_files]
 parking_display_names = [name_mapping.get(p, p) for p in parking_names]
 
-# --- Wetterdaten ---
-weather_url = ("https://api.open-meteo.com/v1/forecast"
-               "?latitude=51.0504&longitude=13.7373"
-               "&current_weather=true&hourly=weathercode,precipitation,relativehumidity_2m")
-response = requests.get(weather_url)
-weather_data = response.json()
-current_weather = weather_data.get("current_weather", {})
-temperature_api = current_weather.get("temperature")
-weather_code = current_weather.get("weathercode")
-
-humidity_series = weather_data.get("hourly", {}).get("relativehumidity_2m", [])
-rain_series = weather_data.get("hourly", {}).get("precipitation", [])
-hourly_times = weather_data.get("hourly", {}).get("time", [])
-
-rain_api = 0.0
-humidity_api = 50.0
-if hourly_times:
-    now_str = datetime.utcnow().replace(minute=0, second=0, microsecond=0).isoformat() + "Z"
-    if now_str in hourly_times:
-        idx = hourly_times.index(now_str)
-        if rain_series:
-            rain_api = rain_series[idx]
-        if humidity_series:
-            humidity_api = humidity_series[idx]
-
-description_auto = weather_code_mapping.get(weather_code, "Unknown")
-sachsen_holidays = holidays.Germany(prov='SN')
-
+# --- UI: Titel & Eingaben ---
 st.title("🅿️ Parking lot predictions for Dresden")
 st.markdown("---")
 st.subheader("User input")
@@ -70,11 +43,44 @@ with col_event:
             "Event size",
             options=[x for x in event_size_values if x],
             format_func=lambda x: event_size_display_mapping.get(x, x),
-            default = "medium"
+            default="medium"
         )
         event_size = raw_event_size
     else:
         event_size = None
+
+# --- Wetterdaten (Vorhersage angepasst an prediction_time) ---
+weather_url = (
+    "https://api.open-meteo.com/v1/forecast"
+    "?latitude=51.0504&longitude=13.7373"
+    "&hourly=temperature_2m,weathercode,precipitation,relativehumidity_2m"
+    "&forecast_days=3"
+    "&timezone=auto"
+)
+response = requests.get(weather_url)
+weather_data = response.json()
+
+hourly_times = weather_data.get("hourly", {}).get("time", [])
+temp_series = weather_data.get("hourly", {}).get("temperature_2m", [])
+weather_series = weather_data.get("hourly", {}).get("weathercode", [])
+rain_series = weather_data.get("hourly", {}).get("precipitation", [])
+humidity_series = weather_data.get("hourly", {}).get("relativehumidity_2m", [])
+
+pred_time_str = prediction_time.strftime("%Y-%m-%dT%H:00")
+if pred_time_str in hourly_times:
+    idx = hourly_times.index(pred_time_str)
+    temperature_api = temp_series[idx]
+    weather_code = weather_series[idx]
+    rain_api = rain_series[idx]
+    humidity_api = humidity_series[idx]
+else:
+    temperature_api = weather_data.get("current_weather", {}).get("temperature", 10)
+    weather_code = weather_data.get("current_weather", {}).get("weathercode", 0)
+    rain_api = 0.0
+    humidity_api = 50.0
+
+description_auto = weather_code_mapping.get(weather_code, "Unknown")
+sachsen_holidays = holidays.Germany(prov='SN')
 
 # --- Zeitbasierte Variablen ---
 hour = prediction_time.hour
@@ -90,17 +96,17 @@ def get_occupancy_value(parking_key, minute_of_day):
     rounded_minute = str(5 * round(minute_of_day / 5))
     return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
 
+# --- Modelle laden und Vorhersagen berechnen ---
 results = []
 selected_prediction = None
 for model_file, key in zip(pkl_files, parking_names):
     try:
         with open(model_file, "rb") as f:
             model = pickle.load(f)
-    except (EOFError, _pickle.UnpicklingError):
+    except (EOFError, pickle.UnpicklingError):
         placeholder = st.empty()
         placeholder.info("An error occurred and the application was restarted.")
         st.experimental_rerun()
-
 
     model_name_value = name_mapping.get(key, key)
     inputs = {
@@ -140,25 +146,20 @@ if selected_prediction is not None:
 st.markdown("---")
 col_selected, col_min, col_max = st.columns([1, 1, 1], border=True)
 
-# Selected parking KPI
 with col_selected:
     if selected_prediction is not None:
         st.markdown("Predicted occupation for selection")
         st.metric(label=f"{selected_parking_display}", value=f"{int(selected_prediction*100)}%")
 
-# Determine min and max predictions
 if results:
     min_result = min(results, key=lambda x: x["Vorhersage %"])
     max_result = max(results, key=lambda x: x["Vorhersage %"])
-
     with col_min:
         st.markdown("Lowest predicted occupation")
         st.metric(label=f"{min_result['Parkplatz']}", value=f"{int(min_result['Vorhersage %']*100)}%")
-
     with col_max:
         st.markdown("Highest predicted occupation")
         st.metric(label=f"{max_result['Parkplatz']}", value=f"{int(max_result['Vorhersage %']*100)}%")
-
 
 # --- Karte ---
 st.markdown("---")
@@ -194,17 +195,15 @@ scatter_layer = pdk.Layer(
 )
 tooltip = {"html": "<b>{Parkplatz}</b><br/>{TooltipText}",
            "style": {"backgroundColor": "steelblue", "color": "white"}}
-# Standard ViewState
 view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
-# Karte anzeigen
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
 
-# Legend
+# Legende
 st.markdown("<div style='display:flex;align-items:center;'><div style='width:20px;height:20px;background-color:rgb(0,255,0);margin-right:5px'></div><span style='margin-right:20px'>Low predicted occupation</span><div style='width:20px;height:20px;background-color:rgb(255,255,0);margin-right:5px'></div><span style='margin-right:20px'>Medium predicted occupation</span><div style='width:20px;height:20px;background-color:rgb(255,0,0);margin-right:5px'></div><span>High predicted occupation</span></div>", unsafe_allow_html=True)
-
 
 st.markdown("---")
 
+# Debugging
 show_debug = st.toggle("Debugging Mode")
 if show_debug:
     st.subheader("Final model input for last prediction")

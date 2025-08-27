@@ -7,17 +7,16 @@ import holidays
 import pandas as pd
 import pydeck as pdk
 import requests
-
 from mappings import *
 
 st.set_page_config(page_title="Dresden Parking", layout="wide")
 
-# --- Parkplatznamen und Mapping auf Eingabewerte ---
+# --- car park names and mapping to inputs ---
 pkl_files = glob.glob("xgb_model_*.pkl")
 parking_names = [f.replace("xgb_model_", "").replace(".pkl", "") for f in pkl_files]
 parking_display_names = [name_mapping.get(p, p) for p in parking_names]
 
-# --- UI: Titel & Eingaben ---
+# --- UI: title & inputs ---
 st.title("🅿️ Parking lot predictions for Dresden")
 st.markdown("---")
 st.subheader("User input")
@@ -49,7 +48,7 @@ with col_event:
     else:
         event_size = None
 
-# --- Wetterdaten (Vorhersage angepasst an prediction_time) ---
+# --- weather data (time of weather prediction according prediction_time) ---
 weather_url = (
     "https://api.open-meteo.com/v1/forecast"
     "?latitude=51.0504&longitude=13.7373"
@@ -80,14 +79,13 @@ else:
     humidity_api = 50.0
 
 description_auto = weather_code_mapping.get(weather_code, "Unknown")
-sachsen_holidays = holidays.Germany(prov='SN')
 
-# --- Zeitbasierte Variablen ---
+# --- time based variables ---
 hour = prediction_time.hour
 minute_of_day = prediction_time.hour * 60 + prediction_time.minute
 weekday = prediction_time.weekday()
 is_weekend = 1 if weekday >= 5 else 0
-is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
+is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in holidays.Germany(prov='SN') else 0
 
 def get_occupancy_value(parking_key, minute_of_day):
     mapped_name = name_mapping.get(parking_key, parking_key)
@@ -96,7 +94,7 @@ def get_occupancy_value(parking_key, minute_of_day):
     rounded_minute = str(5 * round(minute_of_day / 5))
     return occupancy_mapping[mapped_name].get(rounded_minute, 50.0)
 
-# --- Modelle laden und Vorhersagen berechnen ---
+# --- loading models and compute predictions ---
 results = []
 selected_prediction = None
 for model_file, key in zip(pkl_files, parking_names):
@@ -161,7 +159,7 @@ if results:
         st.markdown("Highest predicted occupation")
         st.metric(label=f"{max_result['Parkplatz']}", value=f"{int(max_result['Vorhersage %']*100)}%")
 
-# --- Karte ---
+# --- map ---
 st.markdown("---")
 st.subheader("🗺️ Map for Dresden parking prediction")
 vorhersagen = [res.get("Vorhersage %", 0) for res in results]
@@ -198,12 +196,12 @@ tooltip = {"html": "<b>{Parkplatz}</b><br/>{TooltipText}",
 view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
 
-# Legende
+# --- legend for map ---
 st.markdown("<div style='display:flex;align-items:center;'><div style='width:20px;height:20px;background-color:rgb(0,255,0);margin-right:5px'></div><span style='margin-right:20px'>Low predicted occupation</span><div style='width:20px;height:20px;background-color:rgb(255,255,0);margin-right:5px'></div><span style='margin-right:20px'>Medium predicted occupation</span><div style='width:20px;height:20px;background-color:rgb(255,0,0);margin-right:5px'></div><span>High predicted occupation</span></div>", unsafe_allow_html=True)
 
 st.markdown("---")
 
-# Debugging
+# --- debugging part ---
 show_debug = st.toggle("Debugging Mode")
 if show_debug:
     st.subheader("Final model input for last prediction")

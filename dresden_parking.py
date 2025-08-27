@@ -165,23 +165,23 @@ if results:
 # --- map ---
 st.markdown("---")
 st.subheader("🗺️ Map for Dresden parking prediction")
-vorhersagen = [res.get("Prediction %", 0) for res in results]
-min_val, max_val = min(vorhersagen), max(vorhersagen)
+predictions = [res.get("Prediction %", 0) for res in results]
+min_val, max_val = min(predictions), max(predictions)
 range_val = max_val - min_val if max_val != min_val else 1
 map_data = []
 for res in results:
     car_park = res.get("Car park", "Unbekannt")
-    vorhersage = res.get("Prediction %", 0)
+    pred = res.get("Prediction %", 0)
     coords = coordinates_mapping.get(car_park)
     if coords:
-        norm_value = (vorhersage - min_val) / range_val
+        norm_value = (pred - min_val) / range_val
         r = int(norm_value * 255)
         g = int((1 - norm_value) * 255)
         map_data.append({
             "lat": coords[1],
             "lon": coords[0],
             "Car park": car_park,
-            "TooltipText": f"Prediction for {prediction_time.strftime('%H:%M')}: {int(vorhersage*100)}%",
+            "TooltipText": f"Prediction for {prediction_time.strftime('%H:%M')}: {int(pred*100)}%",
             "color": [r, g, 0]
         })
 

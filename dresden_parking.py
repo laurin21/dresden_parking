@@ -134,7 +134,7 @@ for model_file, key in zip(pkl_files, parking_names):
     for col in input_df.select_dtypes(include=['object']).columns:
         input_df[col] = input_df[col].astype('category')
     prediction = model.predict(input_df)[0]
-    results.append({"Car park": model_name_value, "Prediction %": round(prediction, 2)})
+    results.append({"Parkplatz": model_name_value, "Prediction %": round(prediction, 2)})
     if key == selected_parking:
         selected_prediction = round(prediction, 2)
 
@@ -170,7 +170,7 @@ min_val, max_val = min(vorhersagen), max(vorhersagen)
 range_val = max_val - min_val if max_val != min_val else 1
 map_data = []
 for res in results:
-    parkplatz = res.get("Car park", "Unbekannt")
+    parkplatz = res.get("Parkplatz", "Unbekannt")
     vorhersage = res.get("Prediction %", 0)
     coords = coordinates_mapping.get(parkplatz)
     if coords:
@@ -180,7 +180,7 @@ for res in results:
         map_data.append({
             "lat": coords[1],
             "lon": coords[0],
-            "Car park": parkplatz,
+            "Parkplatz": parkplatz,
             "TooltipText": f"Prediction for {prediction_time.strftime('%H:%M')}: {int(vorhersage*100)}%",
             "color": [r, g, 0]
         })

@@ -7,6 +7,8 @@ import holidays
 import pandas as pd
 import pydeck as pdk
 import requests
+
+# local project imports
 from mappings import *
 
 st.set_page_config(page_title="Dresden Parking", layout="wide")
@@ -85,7 +87,8 @@ hour = prediction_time.hour
 minute_of_day = prediction_time.hour * 60 + prediction_time.minute
 weekday = prediction_time.weekday()
 is_weekend = 1 if weekday >= 5 else 0
-is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in holidays.Germany(prov='SN') else 0
+sachsen_holidays = holidays.Germany(prov='SN')
+is_holiday = 1 if date(prediction_time.year, prediction_time.month, prediction_time.day) in sachsen_holidays else 0
 
 def get_occupancy_value(parking_key, minute_of_day):
     mapped_name = name_mapping.get(parking_key, parking_key)
@@ -131,12 +134,12 @@ for model_file, key in zip(pkl_files, parking_names):
     for col in input_df.select_dtypes(include=['object']).columns:
         input_df[col] = input_df[col].astype('category')
     prediction = model.predict(input_df)[0]
-    results.append({"Parkplatz": model_name_value, "Vorhersage %": round(prediction, 2)})
+    results.append({"Car park": model_name_value, "Prediction %": round(prediction, 2)})
     if key == selected_parking:
         selected_prediction = round(prediction, 2)
 
 for res in results:
-    res["Vorhersage %"] = min(res["Vorhersage %"], 1.00)
+    res["Prediction %"] = min(res["Prediction %"], 1.00)
 if selected_prediction is not None:
     selected_prediction = min(selected_prediction, 1.00)
 
@@ -150,25 +153,25 @@ with col_selected:
         st.metric(label=f"{selected_parking_display}", value=f"{int(selected_prediction*100)}%")
 
 if results:
-    min_result = min(results, key=lambda x: x["Vorhersage %"])
-    max_result = max(results, key=lambda x: x["Vorhersage %"])
+    min_result = min(results, key=lambda x: x["Prediction %"])
+    max_result = max(results, key=lambda x: x["Prediction %"])
     with col_min:
         st.markdown("Lowest predicted occupation")
-        st.metric(label=f"{min_result['Parkplatz']}", value=f"{int(min_result['Vorhersage %']*100)}%")
+        st.metric(label=f"{min_result['Parkplatz']}", value=f"{int(min_result['Prediction %']*100)}%")
     with col_max:
         st.markdown("Highest predicted occupation")
-        st.metric(label=f"{max_result['Parkplatz']}", value=f"{int(max_result['Vorhersage %']*100)}%")
+        st.metric(label=f"{max_result['Parkplatz']}", value=f"{int(max_result['Prediction %']*100)}%")
 
 # --- map ---
 st.markdown("---")
 st.subheader("🗺️ Map for Dresden parking prediction")
-vorhersagen = [res.get("Vorhersage %", 0) for res in results]
+vorhersagen = [res.get("Prediction %", 0) for res in results]
 min_val, max_val = min(vorhersagen), max(vorhersagen)
 range_val = max_val - min_val if max_val != min_val else 1
 map_data = []
 for res in results:
-    parkplatz = res.get("Parkplatz", "Unbekannt")
-    vorhersage = res.get("Vorhersage %", 0)
+    parkplatz = res.get("Car park", "Unbekannt")
+    vorhersage = res.get("Prediction %", 0)
     coords = coordinates_mapping.get(parkplatz)
     if coords:
         norm_value = (vorhersage - min_val) / range_val
@@ -177,7 +180,7 @@ for res in results:
         map_data.append({
             "lat": coords[1],
             "lon": coords[0],
-            "Parkplatz": parkplatz,
+            "Car park": parkplatz,
             "TooltipText": f"Prediction for {prediction_time.strftime('%H:%M')}: {int(vorhersage*100)}%",
             "color": [r, g, 0]
         })

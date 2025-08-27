@@ -134,7 +134,7 @@ for model_file, key in zip(pkl_files, parking_names):
     for col in input_df.select_dtypes(include=['object']).columns:
         input_df[col] = input_df[col].astype('category')
     prediction = model.predict(input_df)[0]
-    results.append({"Parkplatz": model_name_value, "Prediction %": round(prediction, 2)})
+    results.append({"Car park": model_name_value, "Prediction %": round(prediction, 2)})
     if key == selected_parking:
         selected_prediction = round(prediction, 2)
 
@@ -157,10 +157,10 @@ if results:
     max_result = max(results, key=lambda x: x["Prediction %"])
     with col_min:
         st.markdown("Lowest predicted occupation")
-        st.metric(label=f"{min_result['Parkplatz']}", value=f"{int(min_result['Prediction %']*100)}%")
+        st.metric(label=f"{min_result['Car park']}", value=f"{int(min_result['Prediction %']*100)}%")
     with col_max:
         st.markdown("Highest predicted occupation")
-        st.metric(label=f"{max_result['Parkplatz']}", value=f"{int(max_result['Prediction %']*100)}%")
+        st.metric(label=f"{max_result['Car park']}", value=f"{int(max_result['Prediction %']*100)}%")
 
 # --- map ---
 st.markdown("---")
@@ -170,9 +170,9 @@ min_val, max_val = min(vorhersagen), max(vorhersagen)
 range_val = max_val - min_val if max_val != min_val else 1
 map_data = []
 for res in results:
-    parkplatz = res.get("Parkplatz", "Unbekannt")
+    car_park = res.get("Car park", "Unbekannt")
     vorhersage = res.get("Prediction %", 0)
-    coords = coordinates_mapping.get(parkplatz)
+    coords = coordinates_mapping.get(car_park)
     if coords:
         norm_value = (vorhersage - min_val) / range_val
         r = int(norm_value * 255)
@@ -180,7 +180,7 @@ for res in results:
         map_data.append({
             "lat": coords[1],
             "lon": coords[0],
-            "Parkplatz": parkplatz,
+            "Car park": car_park,
             "TooltipText": f"Prediction for {prediction_time.strftime('%H:%M')}: {int(vorhersage*100)}%",
             "color": [r, g, 0]
         })
@@ -194,7 +194,7 @@ scatter_layer = pdk.Layer(
     get_radius=50,
     pickable=True
 )
-tooltip = {"html": "<b>{Parkplatz}</b><br/>{TooltipText}",
+tooltip = {"html": "<b>{Car park}</b><br/>{TooltipText}",
            "style": {"backgroundColor": "steelblue", "color": "white"}}
 view_state = pdk.ViewState(latitude=51.0504, longitude=13.7373, zoom=13)
 st.pydeck_chart(pdk.Deck(layers=[scatter_layer], initial_view_state=view_state, tooltip=tooltip))
